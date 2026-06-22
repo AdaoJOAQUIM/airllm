@@ -58,6 +58,13 @@ fixed equivalence**.
   (Q=1.00) → learn. Measured: decomposition x1.5, execution amplification ~x6 real
   leaf actions per intention atom, and a learning loop where a repeated batch
   collapses **x5.8** once learned.
+- [`tme/igc.py`](tme/igc.py) — Intent → Execution Graph Compiler: compiles an
+  intention into a **causal action graph** (nodes/edges/weights) and allocates
+  compute by value-density, not a linear pipeline. The multiplier is **depth of
+  compilation** — a shared sub-result executes once and feeds many consumers.
+  Measured: graph reuse x1.33 budgeted / x2.0 unconstrained, value captured per
+  budget x1.25 vs the linear recompute baseline, held-out Q=1.00; a structureless
+  intention collapses to reuse x1.0 (correctly).
 
 ```bash
 python3 research/tme/tme.py --demo

@@ -80,6 +80,35 @@ L5 learning loop: same intentions, 2nd pass collapses x5.8 (the system learned)
                  -> learn  (a small intention programs a whole running system)
 ```
 
+## Intent → Execution Graph Compiler (`igc.py`)
+
+The piece between an *optimizer* and a *cognitive orchestrator*. Instead of a linear
+pipeline, it compiles an intention into a **causal action graph** (nodes = actions,
+edges = dependencies, weights = value/cost) and **allocates compute by impact**.
+
+The real multiplier is **depth of compilation**, not actions-per-token: a graph lets
+a shared sub-result execute **once** and feed many consumers (a list cannot), and
+lets a budget **prune low-impact nodes** by value-density.
+
+```bash
+python3 igc.py --demo        # graph reuse + value-per-budget vs linear baseline
+```
+
+Measured (`igc.py --demo`):
+```
+diamond intention (6 atoms, goals share `x` and `e`):
+  shared-node reuse x1.33 under budget (x2.0 unconstrained — selftest)
+  value captured per budget: graph x1.25 vs linear recompute-per-goal
+  held-out Q=1.00
+linear intention (nothing to share):
+  reuse x1.00 — amplification collapses toward 1, structure-dependent (correct)
+```
+
+This is the concrete answer to "it doesn't turn an intention into a *system*": a
+compact intention is compiled to a dependency graph, scheduled under a compute
+budget by value/cost, synthesized, executed, and validated — and the graph's
+advantage over a list is **measured**, not asserted.
+
 ## The honest next step toward "post-AirLLM"
 
 Swap the DSL solver for an **LLM proposer**, keeping the loop, directed memory,

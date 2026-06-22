@@ -42,9 +42,27 @@ python3 research/benchmarks/cee.py --selftest
 python3 research/benchmarks/cee.py --runs research/benchmarks/sample_runs.synthetic.jsonl --baseline C0
 ```
 
-The intended chain: **CEE measures the multiplier → build only capabilities proven
-> 1 → only then scale ("AirLLM 2050").** Efficiency per token is the gate; parameter
-count is not.
+**Phase 3 — the closed loop (the instrument acts).** The CEE only observes/ranks;
+this layer *acts, observes the real result, and rewrites itself*, with a multiplier
+measured from **real executions** (not a synthetic log).
+- [`tme/`](tme/) — Token Multiplication Engine: a closed loop over a bounded
+  program-synthesis domain. Wires all five layers the design calls for — real
+  action, field feedback, self-reconfiguration, value routing (value ÷ cost), and
+  bounded memory compression. Measured: warm (memory + reconfig) beats cold by
+  **x1.29** raw compute / **x4.09** in CEQ at equal correctness; density routing
+  beats the value-only trap by **x1.90**.
+
+```bash
+python3 research/tme/tme.py --selftest
+python3 research/tme/tme.py --demo
+```
+
+The intended chain: **CEE measures the multiplier → TME closes the loop and proves
+reuse cuts real compute → build only capabilities proven > 1 → only then scale
+("AirLLM 2050").** Efficiency per token is the gate; parameter count is not. The
+honest next step is to swap TME's DSL solver for an LLM proposer, keeping loop,
+memory, router, and scoring identical, so the same measured multiplier applies to
+real token cost.
 
 ## Status
 

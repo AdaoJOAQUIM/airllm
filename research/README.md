@@ -42,27 +42,34 @@ python3 research/benchmarks/cee.py --selftest
 python3 research/benchmarks/cee.py --runs research/benchmarks/sample_runs.synthetic.jsonl --baseline C0
 ```
 
-**Phase 3 — the closed loop (the instrument acts).** The CEE only observes/ranks;
-this layer *acts, observes the real result, and rewrites itself*, with a multiplier
-measured from **real executions** (not a synthetic log).
-- [`tme/`](tme/) — Token Multiplication Engine: a closed loop over a bounded
-  program-synthesis domain. Wires all five layers the design calls for — real
-  action, field feedback, self-reconfiguration, value routing (value ÷ cost), and
-  bounded memory compression. Measured: warm (memory + reconfig) beats cold by
-  **x1.29** raw compute / **x4.09** in CEQ at equal correctness; density routing
-  beats the value-only trap by **x1.90**.
+**Phase 3 — the closed loop + orchestration (the instrument acts).** The CEE only
+observes/ranks; this layer *acts on real data, observes the real result, and turns a
+minimal intention into a running, validated system*. All multipliers measured from
+**real executions** (not a synthetic log), and **variable by architecture — never a
+fixed equivalence**.
+- [`tme/tme.py`](tme/tme.py) — Token Multiplication Engine: closed loop over a
+  bounded program-synthesis domain (real action, field feedback, directed memory
+  compression, value routing). Measured: directed memory beats cold by **x1.24**
+  raw compute (~x4 CEQ) at equal correctness; density routing beats the value-only
+  trap by **x1.90**. Two layers tested and **dropped for failing their own metric**:
+  self-reconfiguration (x0.84, hurts) and value-only routing (the trap).
+- [`tme/orchestrator.py`](tme/orchestrator.py) — hierarchical orchestrator: a
+  compact intention → decompose → synthesize → execute → **validate on held-out**
+  (Q=1.00) → learn. Measured: decomposition x1.5, execution amplification ~x6 real
+  leaf actions per intention atom, and a learning loop where a repeated batch
+  collapses **x5.8** once learned.
 
 ```bash
-python3 research/tme/tme.py --selftest
 python3 research/tme/tme.py --demo
+python3 research/tme/orchestrator.py --demo
 ```
 
 The intended chain: **CEE measures the multiplier → TME closes the loop and proves
-reuse cuts real compute → build only capabilities proven > 1 → only then scale
-("AirLLM 2050").** Efficiency per token is the gate; parameter count is not. The
-honest next step is to swap TME's DSL solver for an LLM proposer, keeping loop,
-memory, router, and scoring identical, so the same measured multiplier applies to
-real token cost.
+reuse cuts real compute → the orchestrator turns intention into system → build only
+capabilities proven > 1 → only then scale ("AirLLM 2050").** Efficiency per token is
+the gate; parameter count is not. The honest next step is to swap the DSL solver for
+an LLM proposer, keeping loop, directed memory, router, validation, and CEE scoring
+identical, so the same measured machinery applies to real token cost.
 
 ## Status
 

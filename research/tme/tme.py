@@ -141,12 +141,21 @@ def task_suite() -> list[Task]:
 
 
 def signature(t: Task) -> tuple:
-    """Compressed task fingerprint for pattern lookup (not the raw data)."""
+    """Compressed task fingerprint for pattern lookup (not the raw data).
+
+    Behavioral, solution-independent features so different transforms land in
+    DIFFERENT buckets -> memory is *directed*, not a colliding bag. Undirected
+    (too-coarse) signatures make reuse cost more than it saves (the CEE lesson).
+    """
     if t.scalar:
         return ("scalar",)
     xs, ys = t.pairs[0]
     bucket = "same" if len(ys) == len(xs) else ("short" if len(ys) < len(xs) else "long")
-    return ("list", bucket)
+    perm = sorted(ys) == sorted(xs)                       # reordering vs value-change
+    desc = len(ys) > 1 and ys == sorted(ys, reverse=True)
+    first_eq = bool(xs) and bool(ys) and ys[0] == xs[0]
+    last_eq = bool(xs) and bool(ys) and ys[-1] == xs[-1]
+    return ("list", bucket, perm, desc, first_eq, last_eq)
 
 
 # --------------------------------------------------------------------------- #
@@ -215,7 +224,10 @@ class Engine:
         for n in prog[0]:
             self.op_wins[n] = self.op_wins.get(n, 0) + 1
         if reconfigure:                                # the engine rewrites itself
-            self.op_order.sort(key=lambda n: self.op_wins.get(n, 0), reverse=True)
+            # Conservative: promote *used* ops as a block, preserving original order
+            # within groups (stable). Aggressive full-sort can bury a still-needed
+            # op and make later tasks COST MORE -- a real self-modification hazard.
+            self.op_order.sort(key=lambda n: self.op_wins.get(n, 0) > 0, reverse=True)
         return True, cost, prog
 
     def compression_ratio(self) -> float:
@@ -270,12 +282,14 @@ def _demo(emit_path: str | None = None):
     _, cold_cost, cold_solved, cold_rec = run_suite(
         tasks, use_memory=False, reconfigure=False, per_task_budget=BUD)
     warm_eng, warm_cost, warm_solved, warm_rec = run_suite(
-        tasks, use_memory=True, reconfigure=True, per_task_budget=BUD)
+        tasks, use_memory=True, reconfigure=False, per_task_budget=BUD)
+    # reconfiguration probe (kept honest: measured, not assumed beneficial)
+    _, recfg_cost, _, _ = run_suite(tasks, use_memory=True, reconfigure=True, per_task_budget=BUD)
     dt = time.perf_counter() - t0
 
     print("== Closed-loop multiplier (REAL executions) ==")
-    print(f"cold (no memory, no reconfig): solved {cold_solved}/{len(tasks)}  cost={cold_cost} candidates")
-    print(f"warm (memory + reconfig)     : solved {warm_solved}/{len(tasks)}  cost={warm_cost} candidates")
+    print(f"cold (no memory)        : solved {cold_solved}/{len(tasks)}  cost={cold_cost} candidates")
+    print(f"warm (memory)           : solved {warm_solved}/{len(tasks)}  cost={warm_cost} candidates")
     if warm_solved == cold_solved and warm_cost > 0:
         print(f"MULTIPLIER (cost_cold / cost_warm at equal correctness) = x{cold_cost / warm_cost:.2f}")
     else:
@@ -283,7 +297,9 @@ def _demo(emit_path: str | None = None):
     print(f"memory compression: {warm_eng.solved_count} solves stored as "
           f"{sum(len(v) for v in warm_eng.memory.values())} patterns "
           f"(ratio {warm_eng.compression_ratio():.2f} solves/pattern, bounded)")
-    print(f"reconfigured op priority (top 5): {warm_eng.op_order[:5]}")
+    print(f"reconfiguration probe   : memory+reconfig cost={recfg_cost} "
+          f"(x{cold_cost / recfg_cost:.2f}) -> "
+          f"{'helps' if recfg_cost < warm_cost else 'does NOT help here; left OFF'}")
     print(f"wall-clock: {dt*1000:.0f} ms")
 
     print("\n== Value routing under a hard global budget ==")
@@ -329,13 +345,13 @@ def _selftest() -> int:
     eng = Engine()
     tasks = task_suite()
     fam = [t for t in tasks if t.family == "scale"]
-    ok1, c1, p1 = eng.solve(fam[0], 800, use_memory=True, reconfigure=True)
-    ok2, c2, p2 = eng.solve(fam[1], 800, use_memory=True, reconfigure=True)
+    ok1, c1, p1 = eng.solve(fam[0], 800, use_memory=True, reconfigure=False)
+    ok2, c2, p2 = eng.solve(fam[1], 800, use_memory=True, reconfigure=False)
     assert ok1 and ok2 and p1 == p2, (ok1, ok2, p1, p2)
     assert c2 < c1, f"memory did not reduce cost: {c1} -> {c2}"
-    # whole-suite multiplier must be > 1 (warm cheaper at equal correctness)
+    # whole-suite multiplier must be > 1 (memory cheaper at equal correctness)
     _, cold, cs, _ = run_suite(tasks, use_memory=False, reconfigure=False, per_task_budget=800)
-    _, warm, ws, _ = run_suite(tasks, use_memory=True, reconfigure=True, per_task_budget=800)
+    _, warm, ws, _ = run_suite(tasks, use_memory=True, reconfigure=False, per_task_budget=800)
     assert cs == ws and warm < cold, (cs, ws, cold, warm)
     print(f"selftest OK: loop executes, reuses (cost {c1}->{c2}), suite multiplier x{cold/warm:.2f}")
     return 0

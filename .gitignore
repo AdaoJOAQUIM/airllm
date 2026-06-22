@@ -5,3 +5,5 @@ airllm.egg-info
 build
 dist
 __pycache__research/tme/runs*.jsonl
+__pycache__/
+*.pyc

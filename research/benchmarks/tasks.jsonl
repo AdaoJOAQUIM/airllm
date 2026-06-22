@@ -1,0 +1,14 @@
+# CEE task suite (FROZEN SPECS). Pre-registered before any run is scored.
+# Each line: a task with its difficulty axis, complexity K in [0,1], and a human
+# baseline estimate H_b (seconds). K and H_b are NEVER self-reported by the system
+# under test — they live here, frozen. `success_criterion` is the pre-registered
+# definition of Q=1. Tags map a task to a benchmark axis.
+{"task_id": "te-01", "axis": "token_efficiency", "complexity": 0.10, "human_baseline_s": 30, "prompt": "Return the capital of France.", "success_criterion": "answer == 'Paris'"}
+{"task_id": "te-02", "axis": "token_efficiency", "complexity": 0.20, "human_baseline_s": 120, "prompt": "Reformat this CSV row into JSON with keys name,age,city.", "success_criterion": "valid JSON with the three keys and correct values"}
+{"task_id": "te-03", "axis": "token_efficiency", "complexity": 0.30, "human_baseline_s": 300, "prompt": "Summarize a 2-paragraph text into one sentence preserving the main claim.", "success_criterion": "single sentence, main claim preserved, no hallucinated fact"}
+{"task_id": "tc-01", "axis": "task_completion", "complexity": 0.55, "human_baseline_s": 1800, "prompt": "Add a CLI flag --json to an existing script and make its tests pass.", "success_criterion": "flag works AND existing+new tests pass"}
+{"task_id": "tc-02", "axis": "task_completion", "complexity": 0.70, "human_baseline_s": 3600, "prompt": "Fix a failing integration across 3 files without breaking other tests.", "success_criterion": "target test passes AND no regression in the suite"}
+{"task_id": "tc-03", "axis": "task_completion", "complexity": 0.85, "human_baseline_s": 7200, "prompt": "Refactor a module to remove a circular import, keeping public API and tests green.", "success_criterion": "no circular import AND public API unchanged AND tests green"}
+{"task_id": "rc-01", "axis": "reasoning_cost", "complexity": 0.40, "human_baseline_s": 240, "prompt": "Evaluate a 3-step arithmetic word problem.", "success_criterion": "numerically correct answer"}
+{"task_id": "rc-02", "axis": "reasoning_cost", "complexity": 0.75, "human_baseline_s": 900, "prompt": "Solve a multi-constraint scheduling puzzle (5 items, 4 constraints).", "success_criterion": "a schedule satisfying all stated constraints"}
+{"task_id": "rc-03", "axis": "reasoning_cost", "complexity": 0.95, "human_baseline_s": 2700, "prompt": "Prove a short combinatorial identity with a valid step-by-step argument.", "success_criterion": "each step valid AND conclusion follows"}

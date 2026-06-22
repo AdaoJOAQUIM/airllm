@@ -1,0 +1,36 @@
+# SYNTHETIC run log — NOT A RESULT. Numbers are invented to exercise cee.py's
+# arithmetic and ablation, and to illustrate the report format. They tell you
+# NOTHING about any real system. The 'synthetic' substring in this filename makes
+# cee.py print a warning banner. Replace with instrumented real runs (see README).
+#
+# Configs: C0 baseline, C1 +memory, C2 +planner, C3 +codegen, C4 +adaptive-compute.
+# The invented story (deliberately mixed, to show the tool can say "drop it"):
+#   - C2 (planner) and C4 (adaptive) multiply > 1
+#   - C3 (codegen) is roughly neutral
+#   - C1 (raw memory, undirected) costs more than it returns  (<1)
+#
+# --- C0 baseline ---
+{"task_id":"te-01","config":"C0","tokens_in":300,"tokens_out":80,"useful_decisions":1,"total_decisions":2,"actions_succeeded":1,"actions_attempted":1,"solution_quality":1.0,"complexity":0.10,"human_baseline_s":30,"oversight_s":5}
+{"task_id":"tc-01","config":"C0","tokens_in":4000,"tokens_out":1500,"useful_decisions":3,"total_decisions":7,"actions_succeeded":2,"actions_attempted":4,"solution_quality":0.6,"complexity":0.55,"human_baseline_s":1800,"oversight_s":400}
+{"task_id":"rc-02","config":"C0","tokens_in":3000,"tokens_out":2500,"useful_decisions":2,"total_decisions":6,"actions_succeeded":1,"actions_attempted":2,"solution_quality":0.5,"complexity":0.75,"human_baseline_s":900,"oversight_s":300}
+{"task_id":"rc-03","config":"C0","tokens_in":5000,"tokens_out":4000,"useful_decisions":2,"total_decisions":8,"actions_succeeded":1,"actions_attempted":3,"solution_quality":0.4,"complexity":0.95,"human_baseline_s":2700,"oversight_s":900}
+# --- C1 +memory (undirected: more tokens, little gain) ---
+{"task_id":"te-01","config":"C1","tokens_in":600,"tokens_out":90,"useful_decisions":1,"total_decisions":3,"actions_succeeded":1,"actions_attempted":1,"solution_quality":1.0,"complexity":0.10,"human_baseline_s":30,"oversight_s":5}
+{"task_id":"tc-01","config":"C1","tokens_in":6500,"tokens_out":1700,"useful_decisions":3,"total_decisions":9,"actions_succeeded":2,"actions_attempted":4,"solution_quality":0.65,"complexity":0.55,"human_baseline_s":1800,"oversight_s":380}
+{"task_id":"rc-02","config":"C1","tokens_in":5200,"tokens_out":2700,"useful_decisions":2,"total_decisions":8,"actions_succeeded":1,"actions_attempted":2,"solution_quality":0.55,"complexity":0.75,"human_baseline_s":900,"oversight_s":280}
+{"task_id":"rc-03","config":"C1","tokens_in":8000,"tokens_out":4200,"useful_decisions":2,"total_decisions":10,"actions_succeeded":1,"actions_attempted":3,"solution_quality":0.45,"complexity":0.95,"human_baseline_s":2700,"oversight_s":850}
+# --- C2 +planner (fewer wasted decisions, higher quality) ---
+{"task_id":"te-01","config":"C2","tokens_in":350,"tokens_out":80,"useful_decisions":1,"total_decisions":2,"actions_succeeded":1,"actions_attempted":1,"solution_quality":1.0,"complexity":0.10,"human_baseline_s":30,"oversight_s":5}
+{"task_id":"tc-01","config":"C2","tokens_in":4200,"tokens_out":1400,"useful_decisions":4,"total_decisions":5,"actions_succeeded":3,"actions_attempted":3,"solution_quality":0.9,"complexity":0.55,"human_baseline_s":1800,"oversight_s":250}
+{"task_id":"rc-02","config":"C2","tokens_in":3200,"tokens_out":2400,"useful_decisions":3,"total_decisions":4,"actions_succeeded":2,"actions_attempted":2,"solution_quality":0.85,"complexity":0.75,"human_baseline_s":900,"oversight_s":180}
+{"task_id":"rc-03","config":"C2","tokens_in":5200,"tokens_out":3800,"useful_decisions":3,"total_decisions":6,"actions_succeeded":2,"actions_attempted":3,"solution_quality":0.7,"complexity":0.95,"human_baseline_s":2700,"oversight_s":600}
+# --- C3 +codegen (roughly neutral: helps actions, costs validation tokens) ---
+{"task_id":"te-01","config":"C3","tokens_in":320,"tokens_out":85,"useful_decisions":1,"total_decisions":2,"actions_succeeded":1,"actions_attempted":1,"solution_quality":1.0,"complexity":0.10,"human_baseline_s":30,"oversight_s":5}
+{"task_id":"tc-01","config":"C3","tokens_in":4800,"tokens_out":2000,"useful_decisions":3,"total_decisions":6,"actions_succeeded":3,"actions_attempted":4,"solution_quality":0.75,"complexity":0.55,"human_baseline_s":1800,"oversight_s":300}
+{"task_id":"rc-02","config":"C3","tokens_in":3300,"tokens_out":2600,"useful_decisions":2,"total_decisions":5,"actions_succeeded":2,"actions_attempted":2,"solution_quality":0.6,"complexity":0.75,"human_baseline_s":900,"oversight_s":260}
+{"task_id":"rc-03","config":"C3","tokens_in":5400,"tokens_out":4100,"useful_decisions":2,"total_decisions":7,"actions_succeeded":1,"actions_attempted":3,"solution_quality":0.45,"complexity":0.95,"human_baseline_s":2700,"oversight_s":820}
+# --- C4 +adaptive-compute (same quality, fewer tokens on easy items) ---
+{"task_id":"te-01","config":"C4","tokens_in":150,"tokens_out":40,"useful_decisions":1,"total_decisions":1,"actions_succeeded":1,"actions_attempted":1,"solution_quality":1.0,"complexity":0.10,"human_baseline_s":30,"oversight_s":3}
+{"task_id":"tc-01","config":"C4","tokens_in":3600,"tokens_out":1300,"useful_decisions":3,"total_decisions":5,"actions_succeeded":2,"actions_attempted":3,"solution_quality":0.6,"complexity":0.55,"human_baseline_s":1800,"oversight_s":380}
+{"task_id":"rc-02","config":"C4","tokens_in":3100,"tokens_out":2500,"useful_decisions":2,"total_decisions":5,"actions_succeeded":1,"actions_attempted":2,"solution_quality":0.55,"complexity":0.75,"human_baseline_s":900,"oversight_s":290}
+{"task_id":"rc-03","config":"C4","tokens_in":5100,"tokens_out":4000,"useful_decisions":2,"total_decisions":7,"actions_succeeded":1,"actions_attempted":3,"solution_quality":0.45,"complexity":0.95,"human_baseline_s":2700,"oversight_s":880}

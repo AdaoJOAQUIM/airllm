@@ -5,6 +5,21 @@
 > **Mission**: Invent the next generation of local AI architecture, not optimize the current one.
 > **Goal**: Achieve cognitive capabilities of 1T+ parameter models WITHOUT storing or executing 1T actual parameters.
 
+---
+
+## 🎯 Core Research Question
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│   "Do we NEED to store 1T parameters to have 1T-parameter capability?"   │
+│                                                                         │
+│   Paradigm Shift: Intelligence as a Generative Process                   │
+│   NOT: Intelligence as Stored Parameters                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)
 

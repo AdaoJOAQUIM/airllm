@@ -156,20 +156,35 @@ def _cmd_selftest() -> int:
     return 0
 
 
+def _cmd_learn(memory_path: str) -> int:
+    """Paradigm step: grow the engine's own language (library learning) and persist
+    it, so it can solve NOVEL tasks beyond the base DSL afterwards."""
+    from abstraction import paradigm_report
+    te = TokenEngine(memory_path=memory_path)
+    paradigm_report(te.eng)            # learns macros onto te.eng, prints the 3 proofs
+    te.save()
+    print(f"\ngrown language persisted -> {memory_path} "
+          f"(the DSL itself is now larger, not just the cache)")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Token-Multiplier Engine (deterministic kernel)")
     ap.add_argument("--run", metavar="INTENTION", help="compile+run one intention")
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--learn", action="store_true", help="library learning (grow the DSL)")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--memory", default=DEFAULT_MEM, help="persistent memory file")
     a = ap.parse_args(argv)
     if a.selftest:
         return _cmd_selftest()
+    if a.learn:
+        return _cmd_learn(a.memory)
     if a.demo:
         return _cmd_demo()
     if a.run:
         return _cmd_run(a.run, a.memory)
-    ap.error("use --run INTENTION, --demo, or --selftest")
+    ap.error("use --run INTENTION, --demo, --learn, or --selftest")
 
 
 if __name__ == "__main__":

@@ -85,10 +85,25 @@ python3 research/tme/engine.py --demo
 python3 research/tme/engine.py --run "x=double(input); e=evens(x); a=sum(e)@2"
 ```
 
+**Phase 5 — self-extending abstraction (the paradigm step).** Memoization caches
+solutions; this *changes the representation* so the engine gets better at the unseen.
+- [`tme/abstraction.py`](tme/abstraction.py) — library learning (MDL): mines solved
+  programs, compresses recurring structure into **new primitives**, grows its own
+  DSL, and **persists the larger language**. Measured, held-out validated, with a
+  guardrail: **transfer** (novel depth-3 tasks 0/2 → 2/2 after learning),
+  **compression** (corpus MDL 8 → 7), **effective depth** (a depth-2 program reaches
+  base-depth-3 work). An unrelated deep task stays unsolved — learning is not magic.
+
+```bash
+python3 research/tme/abstraction.py --demo
+python3 research/tme/engine.py --learn
+```
+
 The intended chain: **CEE measures the multiplier → TME closes the loop and proves
 reuse cuts real compute → the orchestrator turns intention into system → the engine
-makes reuse persistent and economical → build only capabilities proven > 1 → only
-then scale ("AirLLM 2050").** Efficiency per token is
+makes reuse persistent and economical → abstraction grows the engine's own language
+so it solves the unseen → build only capabilities proven > 1 → only then scale
+("AirLLM 2050").** Efficiency per token is
 the gate; parameter count is not. The honest next step is to swap the DSL solver for
 an LLM proposer, keeping loop, directed memory, router, validation, and CEE scoring
 identical, so the same measured machinery applies to real token cost.

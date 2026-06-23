@@ -78,6 +78,40 @@ TERMINALS: dict[str, Callable[[list[int]], int]] = {
 }
 MAXD = 2  # search depth; the demo tasks are solvable within this.
 
+# Learned abstractions (library learning): name -> sequence of base op names. The
+# vocabulary is EXTENSIBLE -- this is what turns memoization into representation
+# change. A macro of length k lets a depth-k base program be reached at depth-1, so
+# tasks beyond MAXD in base ops become solvable within MAXD. Kept module-global so
+# run_program (called without an Engine) can resolve macros; persisted with memory.
+LEARNED: dict[str, tuple[str, ...]] = {}
+
+
+def _macro_fn(seq: tuple[str, ...]) -> Callable[[list[int]], list[int]]:
+    fns = [BASE[n] for n in seq]
+    def f(xs):
+        for fn in fns:
+            xs = fn(xs)
+        return xs
+    return f
+
+
+def resolve_op(name: str) -> Callable[[list[int]], list[int]]:
+    """Resolve a base op or a learned macro to a callable."""
+    return BASE[name] if name in BASE else _macro_fn(LEARNED[name])
+
+
+def base_length(prog: Prog) -> int:
+    """Description length in BASE symbols (a macro expands to its definition)."""
+    names, term = prog
+    n = sum(len(LEARNED[x]) if x in LEARNED else 1 for x in names)
+    return n + (1 if term is not None else 0)
+
+
+def symbol_length(prog: Prog) -> int:
+    """Description length in CURRENT symbols (a macro counts as 1)."""
+    names, term = prog
+    return len(names) + (1 if term is not None else 0)
+
 
 def run_program(prog: Prog, x: list[int]):
     """REAL execution of a candidate on one input. Returns output or _ERR."""
@@ -85,7 +119,7 @@ def run_program(prog: Prog, x: list[int]):
     val: list[int] = list(x)
     try:
         for n in names:
-            val = BASE[n](val)
+            val = resolve_op(n)(val)
         if term is not None:
             return TERMINALS[term](val)
         return val
@@ -234,6 +268,12 @@ class Engine:
         patterns = sum(len(v) for v in self.memory.values())
         return self.solved_count / patterns if patterns else 0.0
 
+    def add_macro(self, name: str, base_seq) -> None:
+        """Register a learned abstraction and make it searchable (grow the DSL)."""
+        LEARNED[name] = tuple(base_seq)
+        if name not in self.op_order:
+            self.op_order.append(name)
+
     # --- persistence (opt-in): lets reuse accumulate ACROSS runs/sessions -------
     def save(self, path) -> None:
         """Serialize directed memory + stats to JSON. Tuples -> lists."""
@@ -245,6 +285,7 @@ class Engine:
             "op_wins": self.op_wins,
             "op_order": self.op_order,
             "solved_count": self.solved_count,
+            "learned": {k: list(v) for k, v in LEARNED.items()},  # the grown language
         }
         _Path(path).write_text(_json.dumps(data))
 
@@ -264,6 +305,7 @@ class Engine:
         self.op_wins = data.get("op_wins", {})
         self.op_order = data.get("op_order") or list(BASE)
         self.solved_count = data.get("solved_count", 0)
+        LEARNED.update({k: tuple(v) for k, v in data.get("learned", {}).items()})
         return True
 
 

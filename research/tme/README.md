@@ -137,6 +137,33 @@ The engine is itself economical: stdlib only, deterministic, one small file, and
 persistence (`--memory`, default `.engine_memory.json`, gitignored) makes re-runs
 cheap. This is the proven kernel; "airllm 2050" is meant to be built *with* it.
 
+## Self-extending abstraction (`abstraction.py`) — the paradigm step
+
+v1 above is *memoization*: it caches exact solutions. The paradigm step is the
+engine **changing its own representation**: it mines its solved programs, compresses
+the most recurring structure into **new primitives** (library learning / MDL), grows
+its own DSL, and thereby solves **novel tasks it could not solve before** — at equal
+compute. A cache cannot do that.
+
+```bash
+python3 abstraction.py --demo
+python3 engine.py --learn        # grow the DSL and PERSIST the larger language
+```
+
+The three proofs it is NOT a cache (all measured, all required), with a guardrail:
+```
+learned macro: ('feven','psum')        # picked by COMPRESSION, not by frequency alone
+1) TRANSFER : novel depth-3 tasks (> base MAXD=2) solved  0/2 -> 2/2 after learning
+2) MDL      : training corpus description length  8 -> 7 (5 symbols + 2 library)
+3) DEPTH    : nv1 solved as ('m0','rev') depth 2  ==  base depth 3
+GUARDRAIL   : an unrelated deep task stays 0 -> 0 (learning is not magic)
+```
+
+Held-out validation gates every "solved" (a program counts only if it generalizes to
+unseen inputs), so transfer is real, not an overfit to few examples. The grown
+language persists with the memory, so the engine's *vocabulary* — not just its cache
+— carries across sessions.
+
 ## The honest next step toward "post-AirLLM"
 
 Swap the DSL solver for an **LLM proposer**, keeping the loop, directed memory,

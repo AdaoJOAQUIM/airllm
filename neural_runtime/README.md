@@ -1,6 +1,9 @@
-# Neural Runtime Engine 🧠⚡
+# 🧠 PROJECT GENESIS: Neural Runtime Engine
 
-> ** objectif ambitieux : Exécuter des modèles IA de 1 trillion de paramètres en local, offline, sur du matériel limité**
+## Beyond AirLLM — Towards a Cognitive Runtime for Trillion-Scale Intelligence
+
+> **Mission**: Invent the next generation of local AI architecture, not optimize the current one.
+> **Goal**: Achieve cognitive capabilities of 1T+ parameter models WITHOUT storing or executing 1T actual parameters.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)

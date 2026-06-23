@@ -49,7 +49,7 @@ class ModelConfig:
     quantization_config: Optional[QuantizationConfig] = None
     
     # Memory management
-    memory_level: MemoryLevel = MemoryLevel.VRAM  # Where to keep active layers
+    memory_level: MemoryLevel = MemoryLevel.HBM  # Where to keep active layers (HBM = VRAM on GPU)
     max_vram_gb: float = 0.0  # 0 = auto-detect
     max_ram_gb: float = 0.0
     use_hierarchical_memory: bool = True

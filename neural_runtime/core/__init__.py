@@ -1,6 +1,6 @@
 """Core module - Neural Runtime Engine."""
 
 from .model import NeuralRuntimeModel
-from .inference import InferenceEngine
+from .hardware import HardwareDetector
 
-__all__ = ["NeuralRuntimeModel", "InferenceEngine"]
+__all__ = ["NeuralRuntimeModel", "HardwareDetector"]

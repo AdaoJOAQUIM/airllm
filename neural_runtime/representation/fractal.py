@@ -378,7 +378,8 @@ class RecursiveFractalCompressor(FractalCompressor):
                     "shape": (h, w),
                 }
         else:
-            # No fractal, store blocks or recurse
+            # No fractal, get quadrants and recurse
+            q1, q2, q3, q4 = decomposer.get_quadrants()
             return {
                 "type": "mixed",
                 "children": [

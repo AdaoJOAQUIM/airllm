@@ -7,7 +7,7 @@ __version__ = "0.1.0"
 __author__ = "Neural Runtime Team"
 
 from .core.model import NeuralRuntimeModel
-from .core.inference import InferenceEngine
+from .runtime.inference import InferenceEngine
 from .memory.hierarchy import HierarchicalMemory
 from .compression.quantizer import Quantizer
 

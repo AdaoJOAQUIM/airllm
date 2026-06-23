@@ -41,11 +41,11 @@ class ExpertConfig:
 @dataclass
 class ExpertStats:
     """Statistics for MoE expert usage."""
-    expert_counts: torch.Tensor        # Number of tokens per expert
-    expert_capacity: int                # Max tokens per expert
-    routing_weights: torch.Tensor       # Average routing weights
-    load_balance_loss: float = 0.0    # Load balancing loss value
-    expert_utilization: List[float]     # Utilization per expert (%)
+    expert_counts: torch.Tensor = None        # Number of tokens per expert
+    expert_capacity: int = 0                   # Max tokens per expert
+    routing_weights: torch.Tensor = None     # Average routing weights
+    load_balance_loss: float = 0.0            # Load balancing loss value
+    expert_utilization: List[float] = None    # Utilization per expert (%)
 
 
 class Expert(nn.Module):

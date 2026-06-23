@@ -107,8 +107,8 @@ def schedule(g: Graph, budget: int, *, share: bool):
 # Execution: synthesize + run required nodes once, on real data
 # --------------------------------------------------------------------------- #
 class Compiler:
-    def __init__(self, budget_synth: int = 800):
-        self.eng = Engine()                 # directed memory shared across nodes
+    def __init__(self, budget_synth: int = 800, engine: Engine | None = None):
+        self.eng = engine or Engine()       # inject to share/persist across intentions
         self.budget_synth = budget_synth
         self.synth_cost = 0
         self.node_execs = 0

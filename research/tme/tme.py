@@ -234,6 +234,38 @@ class Engine:
         patterns = sum(len(v) for v in self.memory.values())
         return self.solved_count / patterns if patterns else 0.0
 
+    # --- persistence (opt-in): lets reuse accumulate ACROSS runs/sessions -------
+    def save(self, path) -> None:
+        """Serialize directed memory + stats to JSON. Tuples -> lists."""
+        import json as _json
+        from pathlib import Path as _Path
+        data = {
+            "memory": [[list(sig), [[list(p[0]), p[1]] for p in progs]]
+                       for sig, progs in self.memory.items()],
+            "op_wins": self.op_wins,
+            "op_order": self.op_order,
+            "solved_count": self.solved_count,
+        }
+        _Path(path).write_text(_json.dumps(data))
+
+    def load(self, path) -> bool:
+        """Load persisted memory if present. Returns True if loaded."""
+        import json as _json
+        from pathlib import Path as _Path
+        p = _Path(path)
+        if not p.exists() or not p.read_text().strip():
+            return False
+        try:
+            data = _json.loads(p.read_text())
+        except _json.JSONDecodeError:
+            return False
+        self.memory = {tuple(sig): [(tuple(names), term) for names, term in progs]
+                       for sig, progs in data.get("memory", [])}
+        self.op_wins = data.get("op_wins", {})
+        self.op_order = data.get("op_order") or list(BASE)
+        self.solved_count = data.get("solved_count", 0)
+        return True
+
 
 # --------------------------------------------------------------------------- #
 # Value routing: allocate a global budget by value & solvability.

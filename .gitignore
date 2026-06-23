@@ -7,3 +7,6 @@ dist
 __pycache__research/tme/runs*.jsonl
 __pycache__/
 *.pyc
+research/tme/*.engine_memory.json
+research/tme/.engine_memory.json
+*.memory.json

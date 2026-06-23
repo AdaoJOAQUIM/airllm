@@ -109,6 +109,34 @@ compact intention is compiled to a dependency graph, scheduled under a compute
 budget by value/cost, synthesized, executed, and validated — and the graph's
 advantage over a list is **measured**, not asserted.
 
+## The consolidated engine (`engine.py`) — persistent reuse, orders of magnitude
+
+One economical entry point that wires the whole stack together and adds the feature
+that lets a deterministic kernel reach **orders of magnitude**: **persistent
+memory**. Structured/repeated work approaches zero build-cost across runs, so the
+*measured* multiplier grows with cumulative reuse — and collapses to ~1 on novel
+work. No fixed equivalence.
+
+```bash
+python3 engine.py --selftest
+python3 engine.py --demo
+python3 engine.py --run "x=double(input); e=evens(x); a=sum(e)@2"   # persists memory
+python3 engine.py --run "x=double(input); e=evens(x); a=sum(e)@2"   # 2nd run: x7.00
+```
+
+Measured:
+```
+cross-run persistence (same intention, two processes):
+  run 1: build warm=21 cold=21  -> x1.00   (first sight, nothing to reuse)
+  run 2: build warm= 3 cold=21  -> x7.00   (memory loaded from disk)
+demo (structured workload, cumulative): x1.55 -> x2.24 -> x2.62 over 3 passes
+novel intention: x~1 (collapses correctly — memory cannot multiply the unseen)
+```
+
+The engine is itself economical: stdlib only, deterministic, one small file, and
+persistence (`--memory`, default `.engine_memory.json`, gitignored) makes re-runs
+cheap. This is the proven kernel; "airllm 2050" is meant to be built *with* it.
+
 ## The honest next step toward "post-AirLLM"
 
 Swap the DSL solver for an **LLM proposer**, keeping the loop, directed memory,

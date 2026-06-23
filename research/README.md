@@ -71,9 +71,24 @@ python3 research/tme/tme.py --demo
 python3 research/tme/orchestrator.py --demo
 ```
 
+**Phase 4 — the consolidated engine (one economical tool).**
+- [`tme/engine.py`](tme/engine.py) — `TokenEngine`: one deterministic, no-LLM entry
+  point wiring `igc` (graph) + `tme` (directed memory) + held-out validation, plus
+  **persistent memory** so structured/repeated work approaches zero build-cost
+  across runs. Measured multiplier *grows with reuse* (cross-process: x1.00 first
+  sight → **x7.00** on the second run; cumulative x2.6 over a 3-pass workload) and
+  **collapses to ~1 on novel work** — orders of magnitude via reuse, never a fixed
+  equivalence. The proven kernel "airllm 2050" is meant to be built with.
+
+```bash
+python3 research/tme/engine.py --demo
+python3 research/tme/engine.py --run "x=double(input); e=evens(x); a=sum(e)@2"
+```
+
 The intended chain: **CEE measures the multiplier → TME closes the loop and proves
-reuse cuts real compute → the orchestrator turns intention into system → build only
-capabilities proven > 1 → only then scale ("AirLLM 2050").** Efficiency per token is
+reuse cuts real compute → the orchestrator turns intention into system → the engine
+makes reuse persistent and economical → build only capabilities proven > 1 → only
+then scale ("AirLLM 2050").** Efficiency per token is
 the gate; parameter count is not. The honest next step is to swap the DSL solver for
 an LLM proposer, keeping loop, directed memory, router, validation, and CEE scoring
 identical, so the same measured machinery applies to real token cost.

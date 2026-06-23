@@ -87,12 +87,16 @@ python3 research/tme/engine.py --run "x=double(input); e=evens(x); a=sum(e)@2"
 
 **Phase 5 — self-extending abstraction (the paradigm step).** Memoization caches
 solutions; this *changes the representation* so the engine gets better at the unseen.
-- [`tme/abstraction.py`](tme/abstraction.py) — library learning (MDL): mines solved
-  programs, compresses recurring structure into **new primitives**, grows its own
-  DSL, and **persists the larger language**. Measured, held-out validated, with a
-  guardrail: **transfer** (novel depth-3 tasks 0/2 → 2/2 after learning),
-  **compression** (corpus MDL 8 → 7), **effective depth** (a depth-2 program reaches
-  base-depth-3 work). An unrelated deep task stays unsolved — learning is not magic.
+- [`tme/abstraction.py`](tme/abstraction.py) — library learning (MDL), single-level
+  **and hierarchical**. Mines solved programs, compresses recurring structure into
+  **new primitives** (macros of macros), grows its own DSL, and **persists the larger
+  language**. Measured, held-out validated, with a guardrail: **transfer** (novel
+  depth-3 tasks 0/2 → 2/2), **compression** (corpus MDL 8 → 7), **effective depth**
+  (depth-2 program reaches base-depth-3). Pushed further, nested macros bootstrap a
+  **depth ladder 2 → 4 → 5** while search stays ≤ MAXD. **Claude Code is the
+  proposer**: a 2-symbol intention runs a base-depth-5 pipeline → **x2.5 LoC per
+  written symbol**, measured and variable (≈1 with no reusable structure). An
+  unrelated deep task stays unsolved — learning is not magic.
 
 ```bash
 python3 research/tme/abstraction.py --demo

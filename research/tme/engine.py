@@ -157,11 +157,15 @@ def _cmd_selftest() -> int:
 
 
 def _cmd_learn(memory_path: str) -> int:
-    """Paradigm step: grow the engine's own language (library learning) and persist
-    it, so it can solve NOVEL tasks beyond the base DSL afterwards."""
-    from abstraction import paradigm_report
+    """Paradigm step: grow the engine's own language (HIERARCHICAL library learning)
+    and persist it, so it can solve NOVEL deep tasks beyond the base DSL afterwards.
+    Claude Code is the proposer; this kernel validates, compresses and persists."""
+    from abstraction import paradigm_report, curriculum_report
     te = TokenEngine(memory_path=memory_path)
-    paradigm_report(te.eng)            # learns macros onto te.eng, prints the 3 proofs
+    print("--- single-level proof ---")
+    paradigm_report(te.eng)
+    print("\n--- hierarchical: depth ladder + Claude-as-proposer amplification ---")
+    curriculum_report(te.eng)          # learns nested macros onto te.eng
     te.save()
     print(f"\ngrown language persisted -> {memory_path} "
           f"(the DSL itself is now larger, not just the cache)")

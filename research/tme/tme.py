@@ -87,7 +87,7 @@ LEARNED: dict[str, tuple[str, ...]] = {}
 
 
 def _macro_fn(seq: tuple[str, ...]) -> Callable[[list[int]], list[int]]:
-    fns = [BASE[n] for n in seq]
+    fns = [resolve_op(n) for n in seq]   # resolve recursively -> macros of macros
     def f(xs):
         for fn in fns:
             xs = fn(xs)
@@ -96,15 +96,20 @@ def _macro_fn(seq: tuple[str, ...]) -> Callable[[list[int]], list[int]]:
 
 
 def resolve_op(name: str) -> Callable[[list[int]], list[int]]:
-    """Resolve a base op or a learned macro to a callable."""
+    """Resolve a base op or a (possibly nested) learned macro to a callable."""
     return BASE[name] if name in BASE else _macro_fn(LEARNED[name])
 
 
+def _name_base_len(name: str) -> int:
+    if name in LEARNED:
+        return sum(_name_base_len(n) for n in LEARNED[name])  # expand recursively
+    return 1
+
+
 def base_length(prog: Prog) -> int:
-    """Description length in BASE symbols (a macro expands to its definition)."""
+    """Description length in BASE symbols (macros expand to their full definition)."""
     names, term = prog
-    n = sum(len(LEARNED[x]) if x in LEARNED else 1 for x in names)
-    return n + (1 if term is not None else 0)
+    return sum(_name_base_len(x) for x in names) + (1 if term is not None else 0)
 
 
 def symbol_length(prog: Prog) -> int:

@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neural-runtime"
+version = "0.1.0"
+description = "Ultra-efficient AI inference engine for 1T+ parameter models"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Neural Runtime Team", email = "team@neural-runtime.ai"}
+]
+keywords = [
+    "ai", "inference", "llm", "large-language-models", 
+    "quantization", "optimization", "edge-computing"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "accelerate>=0.20.0",
+    "safetensors>=0.3.0",
+    "huggingface-hub>=0.16.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+# Quantization support
+bnb = [
+    "bitsandbytes>=0.39.0",
+]
+# FP8 support
+fp8 = [
+    "transformer-engine>=0.9.0",
+]
+# All optional dependencies
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.0.270",
+    "mypy>=1.0.0",
+]
+all = [
+    "bitsandbytes>=0.39.0",
+    "transformer-engine>=0.9.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.0.270",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lyogavin/airllm"
+Documentation = "https://github.com/lyogavin/airllm/tree/main/neural_runtime"
+Repository = "https://github.com/lyogavin/airllm"
+Issues = "https://github.com/lyogavin/airllm/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neural_runtime*"]
+
+[tool.setuptools.package-data]
+neural_runtime = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

@@ -1,0 +1,42 @@
+[
+  {
+    "size": "70m",
+    "params": 70000000.0,
+    "n_layers": 6,
+    "n_tokens": 1536,
+    "mean_lock_depth_frac": 0.975,
+    "frac_locked_by_half": 0.003,
+    "median_margin": 0.79,
+    "mean_entropy_nats": 4.272
+  },
+  {
+    "size": "160m",
+    "params": 160000000.0,
+    "n_layers": 12,
+    "n_tokens": 1536,
+    "mean_lock_depth_frac": 0.94,
+    "frac_locked_by_half": 0.016,
+    "median_margin": 0.857,
+    "mean_entropy_nats": 3.928
+  },
+  {
+    "size": "410m",
+    "params": 410000000.0,
+    "n_layers": 24,
+    "n_tokens": 1536,
+    "mean_lock_depth_frac": 0.844,
+    "frac_locked_by_half": 0.059,
+    "median_margin": 0.967,
+    "mean_entropy_nats": 3.163
+  },
+  {
+    "size": "1.4b",
+    "params": 1400000000.0,
+    "n_layers": 24,
+    "n_tokens": 1024,
+    "mean_lock_depth_frac": 0.803,
+    "frac_locked_by_half": 0.174,
+    "median_margin": 1.039,
+    "mean_entropy_nats": 2.855
+  }
+]

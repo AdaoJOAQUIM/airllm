@@ -1,0 +1,18 @@
+{
+  "model": "google/switch-base-8",
+  "axis": "MoE experts",
+  "eval": "WikiText, encoder, 6 MoE layers",
+  "experts": 8,
+  "active_fraction_top1": 0.125,
+  "lossless": true,
+  "router_top1_prob": {
+    "median": 0.28,
+    "mean": 0.28
+  },
+  "routing_entropy_nats": {
+    "mean": 1.994,
+    "max": 2.079
+  },
+  "frac_confidently_routed_gt0.5": 0.0,
+  "reading": "native MoE sparsity is exact/lossless (stream only routed expert); router is near-uniform so the expert cannot be cheaply PREFETCHED before the (cheap) router runs -- losslessness holds, anticipatory prefetch does not"
+}

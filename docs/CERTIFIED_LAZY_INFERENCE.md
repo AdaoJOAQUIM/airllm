@@ -70,6 +70,47 @@ exactly L2's "uncertain regime": GPT-2's high entropy (4 nats) ⇒ small margins
 expensive certification. The mechanism of the duality is *confirmed*; GPT-2 sits
 on its unfavourable side.
 
+## 4b. The crack OPENS with scale (tests Theorem L2)
+
+`kolmogorov/experiments/lazy_inference_scaling.py` — the depth-lock oracle across
+the Pythia suite, WikiText-2:
+
+| N | mean lock-depth (≈ E[C]/full) | locked by half-depth | median margin | entropy (nats) |
+|---:|---:|---:|---:|---:|
+| 70M  | 0.975 | 0.3%  | 0.79 | 4.27 |
+| 160M | 0.940 | 1.6%  | 0.86 | 3.93 |
+| 410M | 0.844 | 5.9%  | 0.97 | 3.16 |
+| 1.4B | **0.803** | **17.4%** | 1.04 | 2.86 |
+
+**Monotone, accelerating, in L2's predicted direction.** Over 20× scale the depth
+oracle cost falls 0.975→0.803, margin rises, entropy falls, and the fraction of
+tokens locked by half-depth grows ~58× (0.3%→17.4%). This is the **first positive
+evidence** that the lossless crack widens with model quality — exactly the L2
+duality (confident models certify cheaply).
+
+Honest limits: it is a depth-axis *oracle* (logit lens, optimistic upper bound on
+savings, not a valid certificate); even at 1.4B the average token still needs 80%
+of depth; and this is extrapolation toward — not a measurement at — trillion
+scale. The direction is unambiguous; the magnitude at scale is unproven.
+
+## 4c. The MoE (expert) axis — native lossless sparsity, but not prefetchable
+
+`kolmogorov/report/moe_routing_results.json` — Switch-base-8, encoder routers:
+
+- **Active fraction per token = 12.5% (top-1), EXACT/lossless by construction.**
+  Streaming only the routed expert is the model's true computation, so a native
+  MoE gives a lossless sparsity lever for free — the single biggest structural
+  win for "1T on a Pi" without any approximation.
+- **Router is near-uniform**: top-1 expert probability median 0.28 (uniform =
+  0.125), routing entropy 1.99/2.08; 0% of tokens routed with confidence > 0.5.
+  Consequence: you **cannot cheaply *prefetch* the routed expert** before running
+  the router — the choice genuinely depends on the full router. But the router is
+  itself cheap, so losslessness holds (compute router exactly → stream one
+  expert); only *anticipatory* prefetch is denied.
+
+Net: native MoE is the cleanest lossless lever (exact sparsity); contextual
+expert-*prediction* is not lossless-cheap on this model.
+
 ## 5. Honest verdict
 
 - **Worst case:** Theorem 4 stands — lossless dense inference cannot beat `H_0`.
@@ -77,13 +118,17 @@ on its unfavourable side.
   unconditionally. That part is solid.
 - **Payoff:** governed by confidence (Thm L2). **Measured on the only model we can
   run (GPT-2): small** — argmax locks late, the depth axis is essentially dead.
-- **Open, with a now-heavy burden of proof:**
-  1. *Other axes* (width/columns, MoE experts) may lock earlier than depth.
-  2. *Scale:* perplexity falls with size (our Stage 1), so by L2 the cheap regime
-     should open up for large (confident) models. **This is the one hopeful,
-     testable thread — and it is unproven; the single data point we have says
-     "small."**
-  3. The open brick: a bound `B(b)` that is valid, fast-decaying, and `o(H_0)`-cheap.
+- **Scale (now measured, §4b):** the depth-lock oracle cost *decreases
+  monotonically* with N (0.975→0.803 over 20×) and tokens-locked-by-half grows
+  ~58×. The L2 duality is **empirically supported**: the lossless crack widens
+  with model quality. Still an oracle/upper-bound and still 0.80 at 1.4B —
+  direction proven, trillion-scale magnitude not.
+- **MoE axis (now measured, §4c):** native top-1 routing gives an *exact* 12.5%
+  active fraction — a real lossless sparsity lever — but routing is near-uniform,
+  so the expert is not cheaply *prefetchable*.
+- **Still open, heavy burden:** the brick — a bound `B(b)` that is valid,
+  fast-decaying, and `o(H_0)`-cheap — turning the oracle trend into a real
+  certified speedup; and whether the trend continues to trillion scale.
 
 ## 6. Where this leaves the dream
 

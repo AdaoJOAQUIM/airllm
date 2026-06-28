@@ -44,6 +44,21 @@ SCENARIOS = [
     Scenario("+gen weights (H_eps/n~0.3%, 2b)", 2, 0.003),  # speculative C1 target
 ]
 
+# --- LOSSLESS (sans perte) -------------------------------------------------
+# Theorem 4 at eps=0: S*_0 = Theta(H_0) = the FULL entropy of the weights.
+# Lossless => NO quantization (lossy), NO approximate weight-generation (lossy),
+# NO contextual sparsity unless activations are EXACTLY zero. The only exact
+# levers: (a) entropy-coding fp16 (~13 bits realistic; weights are near-random
+# in the mantissa, so compression is modest ~1.2x), (b) NATIVE MoE (skipping
+# non-routed experts is the exact computation, not an approximation),
+# (c) exact ReLU zeros, (d) amortizing one stream over a batch (throughput).
+LOSSLESS_BITS = 13.0   # documented: losslessly entropy-coded fp16, realistic
+LOSSLESS = [
+    Scenario("LOSSLESS dense (entropy-coded)",      LOSSLESS_BITS, 1.00),
+    Scenario("LOSSLESS native-MoE (5% routed)",     LOSSLESS_BITS, 0.05),
+    Scenario("LOSSLESS native-MoE (3% routed)",     LOSSLESS_BITS, 0.03),
+]
+
 
 def humantime(s: float) -> str:
     if s < 1:    return f"{s*1000:.0f} ms"
@@ -67,6 +82,21 @@ def report():
             t = gb / bw
             print(f"   {sc.name:<32}{gb:>10.1f}GB{humantime(t):>12}")
 
+    # --- lossless block ---
+    print("\n" + "#" * 78)
+    print("# SANS PERTE (LOSSLESS) -- Theorem 4 at eps=0: you must pay the full")
+    print(f"# entropy H_0 (~{LOSSLESS_BITS:.0f} bits/weight). Quantization & approx")
+    print("# weight-generation are LOSSY and therefore forbidden here.")
+    print("#" * 78)
+    for tier, bw in (("USB3_SSD", STORAGE["USB3_SSD"]),
+                     ("USB3_NVMe", STORAGE["USB3_NVMe"])):
+        print(f"\n storage tier: {tier}  ({bw:.2f} GB/s)")
+        for sc in LOSSLESS:
+            gb = sc.bytes_per_token() / 1e9
+            t = gb / bw
+            print(f"   {sc.name:<36}{gb:>9.1f}GB{humantime(t):>11}"
+                  f"   |  batch=1000: {humantime(t/1000)}/token")
+
     print("\n" + "=" * 78)
     print("VERDICT")
     print("=" * 78)
@@ -88,7 +118,24 @@ def report():
 
  Honest bottom line: '1T offline on a weak Pi' is ALREADY TRUE for correctness
  and storage. The whole game is bytes-per-token, and that is precisely the
- quantity our theory bounds and our experiments shrink.""")
+ quantity our theory bounds and our experiments shrink.
+
+ -- SANS PERTE specifically --
+ Lossless deletes the quantization and approximate-generation levers (both lossy)
+ and pins you to the full entropy H_0 (~13 bits/weight). What survives, exactly:
+   * NATIVE MoE: streaming only routed experts is the model's EXACT computation,
+     not an approximation -> lossless and the single biggest structural win.
+   * exact ReLU zeros (true zeros skipped losslessly).
+   * BATCHING: one lossless stream serves B queued prompts -> per-token cost / B.
+ Consequences on a Pi:
+   * lossless DENSE 1T, single-stream: ~hours/token. Interactive chat is
+     physically impossible; only offline batch makes sense (and there it is fine
+     because batching divides the cost).
+   * lossless native-MoE 1T (3-5% routed): ~1-3 min/token single-stream on a
+     USB SSD; with batch=1000 offline, ~0.1 s/token-equivalent. REAL.
+ So: 'sans perte' is achievable on a Pi for a NATIVE-MoE model and/or for
+ OFFLINE BATCH workloads. Lossless + dense + interactive is ruled out by physics,
+ and Theorem 4 says no cleverness escapes it -- only batching or native sparsity.""")
     print("=" * 78)
 
 

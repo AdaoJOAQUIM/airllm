@@ -212,7 +212,7 @@ class AirLLMBaseModel(GenerationMixin):
 
         # fallback to original way
         if self.model is None:
-            print(f"either BetterTransformer or attn_implementation='sdpa' is available, creating model directly")
+            print(f"neither BetterTransformer nor attn_implementation='sdpa' is available, creating model directly")
             with init_empty_weights():
                 self.model = AutoModelForCausalLM.from_config(self.config, trust_remote_code=True)
 
@@ -288,7 +288,10 @@ class AirLLMBaseModel(GenerationMixin):
             t = time.time()
             if torch.cuda.is_available():  # Check if CUDA is available
                 for k in state_dict.keys():
-                    state_dict[k].pin_memory()
+                    # Tensor.pin_memory() returns a *new* pinned tensor; the
+                    # original is left unchanged. Without the re-assignment the
+                    # prefetch pinning was a silent no-op.
+                    state_dict[k] = state_dict[k].pin_memory()
             else:
                 # For CPU, no action is needed, but you could optionally add a log or message
                 print("Prefetching is enabled, but no pin_memory operation is needed for CPU.")
@@ -411,6 +414,17 @@ class AirLLMBaseModel(GenerationMixin):
             # we don't support kv cache for new version yet
             use_cache = False
 
+        # NOTE: the layer-by-layer forward never correctly accumulated per-layer
+        # attentions / hidden states (the accumulators were never pre-allocated
+        # and were referenced before assignment). Rather than silently return
+        # broken/empty tensors, fail explicitly until the feature is implemented
+        # and validated against a reference model. See AUDIT.md (H3).
+        if output_attentions or output_hidden_states:
+            raise NotImplementedError(
+                "output_attentions / output_hidden_states are not supported by "
+                "AirLLM's layer-by-layer forward yet."
+            )
+
         if self.profiling_mode:
             self.profiler.clear_profiling_time()
 
@@ -505,14 +519,9 @@ class AirLLMBaseModel(GenerationMixin):
                         #batch[j] = layer(seq[torch.arange(n_seq), batch_eos[j]][:, None])
                         batch[j] = self.run_norm(layer, seq)
 
-                        if output_attentions:
-                            all_hidden_states[i].append(batch[j])
                     elif layer_name == self.layer_names_dict['lm_head']:
                         batch[j] = self.run_lm_head(layer, seq)
                     else:
-
-                        if output_attentions:
-                            all_hidden_states[i].append(new_seq)
 
                         if past_key_values is not None:
                             # join past kv
@@ -639,5 +648,5 @@ class AirLLMBaseModel(GenerationMixin):
             logits=logits,
             past_key_values=tuple(kv_cache_list) if kv_cache_list is not None else None,
             hidden_states=tuple(all_hidden_states) if all_hidden_states is not None else None,
-            attentions=tuple(all_self_attns) if all_hidden_states is not None else None,
+            attentions=tuple(all_self_attns) if all_self_attns is not None else None,
         )

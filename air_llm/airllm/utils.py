@@ -47,7 +47,9 @@ def save_quant_state_to_dict(self, packed=True):
         'absmax': self.absmax,
         'blocksize': self.blocksize,
         'quant_map': self.code,
-        'dtype': str(self.dtype).strip('torch.'),
+        # str.strip('torch.') strips a *character set*, not the "torch." prefix;
+        # split on the last dot to reliably get the dtype name (e.g. "float16").
+        'dtype': str(self.dtype).split('.')[-1],
         'shape': tuple(self.shape),
     }
     if self.nested:
@@ -55,7 +57,7 @@ def save_quant_state_to_dict(self, packed=True):
             'nested_absmax': self.state2.absmax,
             'nested_blocksize': self.state2.blocksize,
             'nested_quant_map': self.state2.code,
-            'nested_dtype': str(self.state2.dtype).strip('torch.'),
+            'nested_dtype': str(self.state2.dtype).split('.')[-1],
             'nested_offset': self.offset.item(),
         })
     if not packed:
@@ -176,12 +178,15 @@ def compress_layer_state_dict(layer_state_dict, compression=None):
     return compressed_layer_state_dict if compressed_layer_state_dict is not None else layer_state_dict
 
 def remove_real_and_linked_file(to_delete):
-    if (os.path.realpath(to_delete) != to_delete):
-        targetpath = os.path.realpath(to_delete)
+    # Resolve the symlink target *before* removing the link. When `to_delete`
+    # is a regular file (not a symlink) realpath == to_delete, so there is no
+    # separate target to remove. The previous implementation left `targetpath`
+    # unbound in that case and raised NameError, breaking delete_original=True.
+    targetpath = os.path.realpath(to_delete)
 
     os.remove(to_delete)
-    if (targetpath):
-         os.remove(targetpath)
+    if targetpath != to_delete and os.path.exists(targetpath):
+        os.remove(targetpath)
 
 
 

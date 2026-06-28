@@ -1,0 +1,16 @@
+{
+  "model": "EleutherAI/pythia-410m",
+  "metric": "dppl vs fp32 baseline (ppl=23.757)",
+  "eval": "WikiText-2 test, 20x512 tokens",
+  "quantizer_note": "weight-only MSE-clip calibration (not GPTQ/activation-aware)",
+  "results": {
+    "4bit": {
+      "rtn": 29.841,
+      "calibrated": 12.139
+    },
+    "3bit": {
+      "rtn": 7188.93,
+      "calibrated": 86.973
+    }
+  }
+}

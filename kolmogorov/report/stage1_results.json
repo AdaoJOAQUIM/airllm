@@ -121,5 +121,29 @@
       }
     ],
     "critical_bits": 8
+  },
+  {
+    "size": "2.8b",
+    "params": 2800000000.0,
+    "base_ppl": 15.341,
+    "note": "bf16 base + max_chunks=8 (precision/slice differ from <=1.4b fp32 runs); 8-bit is at the noise floor and not strictly comparable across precision paths",
+    "points": [
+      {
+        "bits": 16,
+        "ppl": 15.341,
+        "dppl": 0.0
+      },
+      {
+        "bits": 8,
+        "ppl": 15.396,
+        "dppl": 0.055
+      },
+      {
+        "bits": 4,
+        "ppl": 20.552,
+        "dppl": 5.211
+      }
+    ],
+    "critical_bits": 8
   }
 ]

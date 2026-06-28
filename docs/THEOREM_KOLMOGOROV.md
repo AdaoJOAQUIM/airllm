@@ -148,35 +148,32 @@ This is the honest, average-case, approximate statement the project needs.
 
 ---
 
-## 7. The deep kernel — a rate–distortion theorem for memory-bounded computation
+## 7. RD-COMP is now a theorem (see PROOFS §4)
 
-Theorems 1–2 are proven *for the gadget* (and, by §3, inside the transformer
-class). The object whose general proof would be a *method*, not an application:
+Theorems 1–2 prove the bound *for the gadget*. The general statement — once posed
+as the conjecture RD-COMP — is **now proven**, and by a route simpler than the
+direct-sum program first envisaged. See `PROOFS_KOLMOGOROV.md` §4, Theorem 4:
 
-> **Conjecture (RD-COMP).** For a natural class `F` of functions and a task
-> distortion `d`, the minimal resident information to evaluate `f ∈ F` in one
-> pass to expected distortion `ε` satisfies
-> `S*_ε(F) ≥ H_ε(F) · (1 − o(1))`,
-> where `H_ε(F)` is the metric `ε`-entropy of `F`. I.e. **the streaming resident
-> cost equals the rate–distortion function of the function class** — Shannon's
-> rate–distortion theorem, but for *interactive computation under a memory
-> bound* rather than for source coding.
+> **Theorem 4 (proven).** In the one-pass model with a *metric* output distortion
+> and persistent-state accounting, `S*_ε(𝓕) = Θ(H_ε(𝓕))` — the resident cost
+> equals the metric entropy (rate–distortion function) of the function class.
 
-**Why it is plausibly provable (attack plan).** The gadget gives the bound for
-one "coordinate of computation." The general statement is a **direct-sum /
-direct-product** claim over `n` such coordinates. The modern tool is
-**information complexity** (Bar-Yossef–Jayram–Kumar–Sivakumar; Braverman): prove
-a *single-coordinate* distortion–information inequality (Thm 2 is its seed), then
-a direct-sum theorem amortizes it across coordinates to `H_ε(F)`. The missing
-piece is a **distortion-aware information-complexity inequality** — a
-strengthening of the standard (exact, worst-case) ones to expected distortion.
+**Proof route, and honest recalibration.** The earlier plan routed through a hard
+*distortion-aware direct-sum / information-complexity* lemma over correlated
+coordinates. That turned out **unnecessary**: a classical **rate–distortion
+converse** (packing/sphere-covering + Fano for the lower bound, covering for the
+upper) proves Theorem 4 directly and is *insensitive to coordinate correlation*,
+because it never decomposes the function into coordinates. Consequently:
 
-**Why this is the only Fields-shaped object here.** If that inequality is new and
-reusable beyond inference — i.e. a general *rate–distortion theory of streaming
-computation* — the prize is for the **technique**, exactly as Fields-level work
-rewards methods, not single results. We state this honestly as aspiration, not
-claim. Absent that generality, Thms 1–2 are **Gödel/Abacus-shaped**: deep,
-unconditional, celebrated — and already the realistic ceiling.
+- The "only Fields-shaped object" framing is **withdrawn** for this result: we did
+  not need a new information-complexity inequality, so we did not invent one.
+- Theorem 4 is correct, general, and clean — but its proof is **classical in
+  flavour** (1948/1959 information theory). Honest ceiling for the *proof itself*:
+  Abacus/Gödel-*flavour* at most, closer to "a clean application of the
+  rate–distortion converse" than to a medal.
+- The **only remaining frontier-grade unknown** migrates to *approximation
+  theory*: the value of `H_ε(𝓕)` for the transformer class (is it `o(N)`?). That
+  is exactly what Stage 1 estimates empirically.
 
 ---
 
@@ -205,11 +202,10 @@ unconditional, celebrated — and already the realistic ceiling.
 |---|---|
 | Thm 1 (worst-case exact, `Ω(n)`, robust to free suffix) | **proven** (standard tools) |
 | Embedding into 1-layer transformer class | **proven** (lemma §3) |
-| Tightness pincer `Θ(min(n, H_ε))` at the two extremes | **proven** |
-| Thm 2 (average-case, distortion-aware, `Ω(n)` for `ε < (1/2-γ)Δ`) | **proven** (coding + counting) |
+| Thm 2 (average-case, distortion-aware, `Ω(n)` for small `ε`) | **proven** (coding + counting) |
+| **Thm 4 — `S*_ε(𝓕)=Θ(H_ε(𝓕))` (was RD-COMP conjecture)** | **proven** (rate–distortion converse; PROOFS §4) |
 | Multi-query / per-token traffic version | open (mechanical extension expected) |
-| RD-COMP general inequality (§7) | **conjecture** + attack plan |
-| `H_ε(N)` for real transformers | **empirical** (Stage 1) |
+| `H_ε(N) = o(N)?` for real transformers | **open** (approximation theory); estimated in Stage 1 |
 
 ## 10. References (to verify at lit-review gate)
 

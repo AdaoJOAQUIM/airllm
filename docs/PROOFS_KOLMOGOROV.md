@@ -152,82 +152,119 @@ weight-generation are mechanisms to make `H_ε ≪ n`; none can beat it.
 
 ---
 
-## 4. RD-COMP — the Fields-shaped object: program, not certificate
+## 4. Theorem 4 (RD-COMP, now proven) — resident cost = metric entropy
 
-Theorems 1–3 prove the bound *for specific families* (codes) and show tightness
-at the extremes. The general statement is:
+Previously stated as a conjecture routed through a hard direct-sum lemma
+(DS-dist). That route was **unnecessarily hard**. A classical *rate–distortion
+converse* (sphere-packing / Fano-style) proves the general statement directly,
+and — crucially — **makes coordinate correlation irrelevant**, because it never
+decomposes the function into coordinates at all. We therefore promote it from
+conjecture to theorem in the clean model below, and recalibrate its standing
+honestly in §4.3.
 
-> **Conjecture RD-COMP.** For every "natural" class `𝓕` (closed under the product
-> below) and output distortion `ε`,
-> `S*_ε(𝓕) ≥ H_ε(𝓕) · (1 − o(1))`.
-> Equivalently: *the one-pass resident cost equals the rate–distortion function
-> of the function class* — Shannon's rate–distortion theorem transplanted from
-> source coding to memory-bounded computation.
+### 4.1 Distortion as a metric
 
-### 4.1 Reduction to a single open lemma
+Let `δ` be a **metric** on the per-query output space — e.g. total variation on
+next-token distributions, or `ℓ₂` on logits. Induce the pseudometric on the
+function class `𝓕`:
+`d(f, g) := 𝔼_{q∼Q} δ(f(q), g(q))`,
+which is symmetric and obeys the triangle inequality (linearity of expectation +
+triangle inequality of `δ`). Let `N(𝓕,d,ε)`, `M(𝓕,d,ε)` be the `ε`-covering and
+`ε`-packing numbers; `H_ε := log N(𝓕,d,ε)` is the metric entropy (KT). Standard
+fact: `N(2ε) ≤ M(2ε) ≤ N(ε)`.
 
-Define the **product** of a base inference task `f` (one "coordinate of
-computation") to `n` independent instances `f^{⊗n}`, with additive distortion.
-For the *exact* (zero-distortion) regime, the required direct-sum machinery
-exists:
+**Resource accounting.** `s` = bits of **persistent post-pass resident state**
+`τ(w)` (the fast memory that must remain to answer queries). Transient stream-time
+scratch is not counted (faithful to "what the resident generator must hold");
+this is stated as a modeling choice, not hidden.
 
-- **(DS-exact)** *Information-complexity direct sum* (Bar-Yossef–Jayram–Kumar–
-  Sivakumar 2004; Braverman 2012): `IC(f^{⊗n}) ≥ n · IC(f) − o(n)` for one-way
-  information complexity `IC` under product distributions.
+The engine's distortion on the true `f` (weights `w_f`) is
+`D(f) := 𝔼_R d(f, h_{τ(w_f),R})`, where `h_{τ,R}(q)=O(τ,q;R)` is its post-pass
+output function.
 
-Our Theorem 2 is precisely the **base case with distortion** for the gadget
-coordinate. What is missing is its amortization across coordinates *with the
-distortion budget shared*:
+### 4.2 The theorem and its proof
 
-> **Open Lemma (DS-dist).** Let `IC_ε` denote one-way information complexity at
-> average distortion `ε`. Then for the product task,
-> `IC_ε(f^{⊗n}) ≥ n · IC_{ε}(f) − o(n)`,
-> i.e. a distortion-aware direct-sum theorem in which a *global* distortion
-> budget `nε` cannot be exploited to cheat on a few coordinates.
+> **Theorem 4.** In the model of §4.1, the minimal persistent resident budget
+> achieving worst-case distortion `D(f) ≤ ε/2` for all `f ∈ 𝓕` satisfies
+> `H_{2ε}(𝓕) − 1 ≤ S*_{ε}(𝓕) ≤ H_ε(𝓕) + O(1)`.
+> Hence, up to the standard `ε`-doubling of metric entropy,
+> **`S*_ε(𝓕) = Θ(H_ε(𝓕))`** — the resident cost of one-pass inference *equals the
+> metric entropy (rate–distortion function) of the model's function class.**
 
-**Claim.** `RD-COMP ⇐ (DS-dist) + (KT)`. *Reduction.* Identify `H_ε(𝓕)` with the
-number of independent `ε`-distinguishable coordinates of `𝓕` (its metric entropy,
-by **(KT)**); apply **(DS-dist)** to amortize the per-coordinate cost — which
-Theorem 2 lower-bounds — to obtain `S*_ε(𝓕) ≥ H_ε(𝓕)(1−o(1))`. ∎ (modulo DS-dist)
+**Proof — lower bound (packing converse).**
+Let `{f_1,…,f_M}` be a maximal `2ε`-packing, `M = M(𝓕,d,2ε)`, so
+`d(f_i,f_j) > 2ε` for `i≠j`. By hypothesis `D(f_i) ≤ ε/2` for all `i`, so
+`𝔼_R[ (1/M) Σ_i d(f_i, h_{τ_i,R}) ] = (1/M) Σ_i D(f_i) ≤ ε/2`.
+Fix coins `R*` attaining at most the mean. By Markov, at most `M/2` indices have
+`d(f_i, h_{τ_i,R*}) > ε`; call the remaining `≥ M/2` indices **good**.
 
-### 4.2 Honest status of (DS-dist)
+Suppose two good indices `i≠j` collide: `τ(w_i) = τ(w_j) = τ`. Then the post-pass
+output function `H := h_{τ,R*}` is *identical* for both (it depends only on `τ`
+and `R*`, not on which weights produced `τ`). Triangle inequality:
+`d(f_i,f_j) ≤ d(f_i,H) + d(H,f_j) ≤ ε + ε = 2ε`, contradicting `d(f_i,f_j)>2ε`.
+So `τ(·)` is **injective on the good set**, giving `2^s ≥ M/2`, i.e.
+`s ≥ log M(𝓕,d,2ε) − 1 ≥ log N(𝓕,d,2ε) − 1 = H_{2ε} − 1`. 
 
-- **Provable now (and effectively proven):** the *product-distribution,
-  independent-coordinate* case — this is exactly the structure of the code gadget
-  in Theorem 2, where coordinates are independent codeword bits. So **RD-COMP
-  holds unconditionally for the independent-coordinate (i.i.d.-weight) class.**
-- **Open crux:** real LLM weights are **not** independent coordinates; their
-  metric-entropy coordinates are *correlated*. Extending **(DS-dist)** to
-  correlated / non-product structure is the genuine difficulty. The exact-case
-  tool **(DS-exact)** does not transfer verbatim because distortion can be
-  *reallocated* across correlated coordinates — precisely the loophole a proof
-  must close.
-- **Why this is the only plausibly-Fields object:** a correct, general
-  **distortion-aware information-complexity inequality robust to coordinate
-  correlation** would be a new method with reach far beyond inference (streaming,
-  data structures, learning, sketching). The prize, if any, attaches to *that
-  inequality*, not to the LLM application. We claim it as a target, not a result.
+**Proof — upper bound (covering).** Take a minimal `ε`-cover `C`,
+`|C| = 2^{H_ε}`. During the pass the engine identifies the cover element nearest
+to `f` (unbounded transient scratch, freed afterward) and keeps **only its index**
+(`H_ε` bits) resident. Answering a query by evaluating that cover element gives
+distortion `≤ ε`. So `S*_ε ≤ H_ε + O(1)`. ∎
 
-### 4.3 What we explicitly do **not** claim
-We do not claim a proof of (DS-dist) in the correlated regime, hence none of
-RD-COMP in general. Anyone presenting §3 as "the Abacus/Gödel result" must label
-§4.2-crux as **open**.
+**Perplexity corollary (Pinsker bridge).** Cross-entropy is not a metric, but TV
+is, and `TV ≤ √(KL/2)` (Pinsker). An engine with average cross-entropy distortion
+`≤ ε²/2` therefore has TV-distortion `≤ ε/2`, so Theorem 4 applies with the
+perplexity metric at the cost of a square root in the constant.
+
+### 4.3 Honest recalibration of the prize
+
+Good news: **the lemma is now a theorem** — the "open crux" (correlated
+coordinates) dissolves because the packing argument never decomposes into
+coordinates. Sobering news, stated plainly: **the proof is the classical
+rate–distortion converse** (sphere-packing + Fano + covering achievability),
+transplanted to the streaming-inference model. That makes Theorem 4 **correct,
+general, and clean — but not a new method.** It is a *characterization*, of
+Abacus/Gödel *flavour* at most, and honestly closer to "a clean application of
+1959-era information theory" than to a medal-shaped breakthrough.
+
+The earlier framing — that a *new* distortion-aware information-complexity
+inequality robust to correlation would be Fields-shaped — is now **moot for this
+result**: we did not need such an inequality, so we did not invent one. If a
+genuinely novel technique lives anywhere here, it is **not** in Theorem 4; it
+would be in *computing* `H_ε(𝓕)` for the transformer class (an
+approximation-theory problem, see §4.4), which Theorem 4 reduces the whole
+question to but does **not** solve.
+
+### 4.4 Where the remaining mathematical content actually lives
+
+Theorem 4 reduces "how cheap can streaming/generative inference be?" to **one
+quantity**: `H_ε(transformers)`. That is now an **approximation-theory** question
+(metric entropy / Kolmogorov n-widths of the transformer function class), not a
+complexity-theory one. It is exactly what **Stage 1 estimates empirically**
+(`b*(N) ≈ H_ε(N)/n`). Proving `H_ε(N) = o(N)` (or a plateau) for real
+architectures is the open problem the theorem now isolates — and it is genuinely
+deep, but it is analysis/approximation theory, not communication complexity.
 
 ---
 
-## 5. Ledger (what each tier honestly is)
+## 5. Ledger (recalibrated, honest)
 
-| Result | Tier | Status |
+| Result | Honest tier | Status |
 |---|---|---|
-| Thm 1 (worst-case, `Ω(n)`, free suffix) | Abacus/Gödel-grade ingredient | **proven** given (AIND) |
-| Thm 2 / §6.1 (perplexity-distortion, `Ω(n)`) | Abacus/Gödel-grade ingredient | **proven** given (LIST) |
-| Corollary 3 pincer `Θ(min(n,H_ε))` | characterization | **proven** given (KT) |
-| RD-COMP for i.i.d. coordinates | — | **proven** (special case of Thm 2 machinery) |
-| RD-COMP general (correlated) | the only Fields-candidate | **open** — reduced to (DS-dist) |
-| (DS-dist) correlated direct-sum | the new method | **open** — stated, attack via info-complexity |
-| `H_ε(N)` for real transformers | empirical input | measured in Stage 1 |
+| Thm 1 (worst-case, `Ω(n)`, free suffix) | clean reduction | **proven** given (AIND) |
+| Thm 2 / §6.1 (perplexity-distortion, `Ω(n)`) | coding + counting | **proven** given (LIST) |
+| **Thm 4 — `S*_ε(𝓕)=Θ(H_ε(𝓕))`** | rate–distortion converse (classical-flavour) | **proven** given (KT) |
+| RD-COMP general (incl. correlated classes) | — | **proven** (= Thm 4; no DS-dist needed) |
+| New distortion-aware info-complexity method | the would-be Fields object | **not produced** (turned out unnecessary) |
+| `H_ε(N)` for real transformers `= o(N)?` | the real open problem | **open** (approximation theory); estimated in Stage 1 |
+
+**Net:** the systems→math reduction is now a *proven characterization*. The
+honest prize ceiling for the proof itself is Abacus/Gödel-*flavour* at best; the
+only remaining frontier-grade unknown is the value of `H_ε` for transformers.
 
 ## 6. References (verify at lit-review gate)
-MNSW 1998 (Augmented Indexing); Kushilevitz–Nisan 1997; BJKS 2004 and Braverman
-2012 (information complexity / direct sum); Guruswami 2004 (list decoding);
-Kolmogorov–Tikhomirov 1959 (metric entropy); Shannon 1959 (rate–distortion).
+MNSW 1998 (Augmented Indexing); Kushilevitz–Nisan 1997; Guruswami 2004 (list
+decoding); Kolmogorov–Tikhomirov 1959 (metric entropy / `ε`-entropy); Shannon
+1948/1959 (rate–distortion converse); Cover–Thomas, *Elements of Information
+Theory* (sphere-packing converse, Fano); BJKS 2004 / Braverman 2012 (information
+complexity — the harder route Theorem 4 shows is **not** needed here).

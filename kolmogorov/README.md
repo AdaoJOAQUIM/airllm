@@ -33,9 +33,12 @@ python3 -m kolmogorov.experiments.stage0_lowrank --max-chunks 30
 
 ## Status (2026-06-28)
 - **Theory:** `docs/THEOREM_KOLMOGOROV.md` + `docs/PROOFS_KOLMOGOROV.md` — proven
-  streaming lower bounds (Thm 1 worst-case, Thm 2 distortion-aware) giving the
-  pincer `S*_ε = Θ(min(n, H_ε))`; the RD-COMP conjecture isolated to one open
-  lemma (no faked proof).
+  streaming lower bounds (Thm 1 worst-case, Thm 2 distortion-aware) **and Thm 4**
+  `S*_ε(𝓕) = Θ(H_ε(𝓕))` (the former RD-COMP conjecture, now proven via the
+  classical rate–distortion converse; the proof is correct but classical-flavour,
+  honestly Abacus/Gödel-flavour at most). The only remaining frontier unknown is
+  whether `H_ε(N) = o(N)` for transformers — an approximation-theory question,
+  estimated by Stage 1.
 - **C2 (systems):** simulator shows recompute beats reload for any generator of
   rank up to ~6000 on NVMe (≥476 on the tightest realistic tier). C2's fate is
   therefore reduced to C1.

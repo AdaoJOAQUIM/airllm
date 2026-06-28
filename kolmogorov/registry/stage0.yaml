@@ -1,0 +1,29 @@
+# Pre-registration manifest — Project KOLMOGOROV, Stage 0
+# Plan refs: PROJECT_KOLMOGOROV.md §6 (protocol), §7 (validation), §8 (refutation).
+# Thresholds below were fixed by the plan BEFORE running. Do not edit post-hoc.
+
+experiment: stage0_lowrank
+hypothesis_under_test: C1   # information content of trained weights
+generator_family: G1        # truncated-SVD low-rank (the weakest baseline)
+
+model: gpt2                 # GPT-2 small, 124M
+seed: 0
+eval:
+  dataset: Salesforce/wikitext (wikitext-2-raw-v1, test)
+  seq_len: 512
+  max_chunks: 30            # ~15k tokens, non-overlapping, deterministic
+  metric: token-level perplexity
+
+sweep:
+  rank_fractions: [0.9, 0.5, 0.25, 0.1, 0.05, 0.02]
+
+controls:
+  - full_rank_svd_roundtrip_must_equal_baseline   # harness validity gate
+
+# Pre-registered decision rules (frozen):
+success_signal_C1: "exists a point with dppl <= 0.2 AND b_eff <= 2.0 bits/weight"
+pivot_signal:      "steep dppl cliff before any compression => structure is not
+                    plain low-rank; pivot generator family (hypernet/diffusion/
+                    calibrated decomposition), do NOT abandon C1"
+refute_C1_overall: "deferred — a single weak generator failing cannot refute C1;
+                    only the full generator portfolio failing at scale can"

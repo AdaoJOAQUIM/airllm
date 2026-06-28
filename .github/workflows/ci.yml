@@ -27,19 +27,26 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install static-analysis tooling
-        run: python -m pip install --upgrade pip pyflakes
+        run: python -m pip install --upgrade pip pyflakes numpy
 
       - name: Byte-compile all sources
-        run: python -m compileall -q air_llm/airllm
+        run: |
+          python -m compileall -q air_llm/airllm
+          python -m compileall -q kolmogorov
 
       - name: Static analysis (undefined names, unbound locals)
         # Fail only on the high-signal checks (F821 undefined name,
         # F823 local used before assignment). Unused-import noise is reported
         # but not fatal so the gate stays meaningful.
         run: |
-          python -m pyflakes air_llm/airllm || true
+          python -m pyflakes air_llm/airllm kolmogorov || true
           echo "---- gating on undefined/unbound-name errors ----"
-          if python -m pyflakes air_llm/airllm 2>&1 | grep -E "undefined name|before assignment"; then
+          if python -m pyflakes air_llm/airllm kolmogorov 2>&1 | grep -E "undefined name|before assignment"; then
             echo "::error::pyflakes found undefined/unbound names"
             exit 1
           fi
+
+      - name: Kolmogorov unit tests (hermetic, no network/GPU)
+        # Only the dependency-light modules (the roofline simulator). The ML
+        # experiments require torch/transformers and are run out-of-band.
+        run: python -m unittest kolmogorov.tests.test_roofline_sim -v

@@ -1,0 +1,50 @@
+[
+  {
+    "fraction": "full(fp16-nominal)",
+    "b_eff": 16.0,
+    "ppl": 37.3007,
+    "dppl": 0.0
+  },
+  {
+    "fraction": "control(full-rank SVD)",
+    "b_eff": 16.0,
+    "ppl": 37.3007,
+    "dppl": 1e-06
+  },
+  {
+    "fraction": 0.9,
+    "b_eff": 19.194,
+    "ppl": 69.4714,
+    "dppl": 32.1707
+  },
+  {
+    "fraction": 0.5,
+    "b_eff": 10.667,
+    "ppl": 3563.4447,
+    "dppl": 3526.144
+  },
+  {
+    "fraction": 0.25,
+    "b_eff": 5.333,
+    "ppl": 10695.0456,
+    "dppl": 10657.7449
+  },
+  {
+    "fraction": 0.1,
+    "b_eff": 2.139,
+    "ppl": 5841.4845,
+    "dppl": 5804.1838
+  },
+  {
+    "fraction": 0.05,
+    "b_eff": 1.056,
+    "ppl": 6754.5952,
+    "dppl": 6717.2945
+  },
+  {
+    "fraction": 0.02,
+    "b_eff": 0.417,
+    "ppl": 7974.1903,
+    "dppl": 7936.8896
+  }
+]

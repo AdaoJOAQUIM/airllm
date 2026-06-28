@@ -1,0 +1,125 @@
+[
+  {
+    "size": "70m",
+    "params": 70000000.0,
+    "base_ppl": 71.4987,
+    "points": [
+      {
+        "bits": 16,
+        "ppl": 71.4987,
+        "dppl": 0.0
+      },
+      {
+        "bits": 8,
+        "ppl": 72.1667,
+        "dppl": 0.6681
+      },
+      {
+        "bits": 4,
+        "ppl": 156.6199,
+        "dppl": 85.1213
+      },
+      {
+        "bits": 3,
+        "ppl": 22206.7988,
+        "dppl": 22135.3001
+      },
+      {
+        "bits": 2,
+        "ppl": 9466643524.722,
+        "dppl": 9466643453.2233
+      }
+    ],
+    "critical_bits": null
+  },
+  {
+    "size": "160m",
+    "params": 160000000.0,
+    "base_ppl": 41.4518,
+    "points": [
+      {
+        "bits": 16,
+        "ppl": 41.4518,
+        "dppl": 0.0
+      },
+      {
+        "bits": 8,
+        "ppl": 41.7425,
+        "dppl": 0.2908
+      },
+      {
+        "bits": 4,
+        "ppl": 113.9157,
+        "dppl": 72.464
+      },
+      {
+        "bits": 3,
+        "ppl": 95652.5223,
+        "dppl": 95611.0705
+      },
+      {
+        "bits": 2,
+        "ppl": 34080469604.8744,
+        "dppl": 34080469563.4226
+      }
+    ],
+    "critical_bits": 8
+  },
+  {
+    "size": "410m",
+    "params": 410000000.0,
+    "base_ppl": 23.7571,
+    "points": [
+      {
+        "bits": 16,
+        "ppl": 23.7571,
+        "dppl": 0.0
+      },
+      {
+        "bits": 8,
+        "ppl": 23.851,
+        "dppl": 0.0939
+      },
+      {
+        "bits": 4,
+        "ppl": 53.5986,
+        "dppl": 29.8415
+      },
+      {
+        "bits": 3,
+        "ppl": 7212.6874,
+        "dppl": 7188.9303
+      },
+      {
+        "bits": 2,
+        "ppl": 25817.1224,
+        "dppl": 25793.3653
+      }
+    ],
+    "critical_bits": 8
+  },
+  {
+    "size": "1.4b",
+    "params": 1400000000.0,
+    "base_ppl": 18.679,
+    "note": "max_chunks=12 (slice differs slightly); bits {8,4} only; reload-per-bit (memory-safe)",
+    "points": [
+      {
+        "bits": 16,
+        "ppl": 18.679,
+        "dppl": 0.0
+      },
+      {
+        "bits": 8,
+        "ppl": 18.695,
+        "dppl": 0.016
+      },
+      {
+        "bits": 4,
+        "ppl": 27.578,
+        "dppl": 8.899
+      }
+    ],
+    "critical_bits": 8
+  }
+]

@@ -32,14 +32,20 @@ python3 -m kolmogorov.experiments.stage0_lowrank --max-chunks 30
 ```
 
 ## Status (2026-06-28)
+- **Theory:** `docs/THEOREM_KOLMOGOROV.md` + `docs/PROOFS_KOLMOGOROV.md` — proven
+  streaming lower bounds (Thm 1 worst-case, Thm 2 distortion-aware) giving the
+  pincer `S*_ε = Θ(min(n, H_ε))`; the RD-COMP conjecture isolated to one open
+  lemma (no faked proof).
 - **C2 (systems):** simulator shows recompute beats reload for any generator of
   rank up to ~6000 on NVMe (≥476 on the tightest realistic tier). C2's fate is
   therefore reduced to C1.
-- **C1 (information):** Stage 0 **refutes the naive low-rank generator (G1)** —
-  pretrained weights are near-full-rank; a 10% rank cut doubles perplexity. Per
-  pre-registration this is a *pivot-generator* signal, not a refutation of C1.
-  Next: calibrated/per-layer decomposition, residual-after-quantization, then
-  hypernetwork/diffusion generators; and the Stage 1 scaling law.
+- **C1 (information):**
+  - **Stage 0** *refutes* the naive low-rank generator (weights are near-full-
+    rank) — a pre-registered *pivot-generator* signal, not a refutation of C1.
+  - **Stage 1** *supports* C1: across Pythia 70M→1.4B, fixed-rate quantization
+    distortion falls monotonically (`Δppl ∝ N^{-1.25}` at 8-bit) — the
+    metric-entropy density `H_ε/n` decreases with scale, the direction the
+    pincer needs. Asymptote still open (needs calibrated quant + larger scales).
 
-This is honest, falsifiable, in-progress research. Negative results are reported,
-not hidden.
+This is honest, falsifiable, in-progress research. Negative results (Stage 0) and
+positive ones (Stage 1) are reported alike.

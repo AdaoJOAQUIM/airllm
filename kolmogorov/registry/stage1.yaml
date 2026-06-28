@@ -1,0 +1,29 @@
+# Pre-registration manifest — Project KOLMOGOROV, Stage 1 (scaling law)
+# Plan refs: PROJECT_KOLMOGOROV.md §6; PROOFS_KOLMOGOROV.md Cor 3 (pincer).
+# Thresholds fixed BEFORE running. Do not edit post-hoc.
+
+experiment: stage1_scaling
+measures: "critical bits/weight b*(N) = min bit-width with dppl <= tau"
+interpretation: "b*(N) is an operational estimate of H_eps(N)/n_params"
+
+models: [EleutherAI/pythia-70m, pythia-160m, pythia-410m]   # +1.4b if compute allows
+generator_family: per-channel uniform quantization   # G-quant, known-good probe
+seed: 0
+eval:
+  dataset: Salesforce/wikitext (wikitext-2-raw-v1, test)
+  seq_len: 512
+  max_chunks: 20
+  metric: token-level perplexity
+sweep:
+  bit_widths: [8, 4, 3, 2]
+tau: 0.5     # dppl threshold defining "critical bits"
+
+# Pre-registered decision rules (frozen):
+C1_supported:  "b*(N) strictly DECREASES with N (sublinear metric entropy):
+                streaming inference gets cheaper per parameter with scale"
+C1_refuted:    "b*(N) flat or INCREASING with N: H_eps = Theta(N); the pincer
+                makes disk-streaming fundamentally Omega(model) per token-batch.
+                Report as a clean impossibility, not a failure."
+caveat:        "uniform quantization is one compressor; b* is an UPPER bound on
+                H_eps/n. A decreasing b* is strong positive evidence; a flat b*
+                bounds, but does not by itself prove, H_eps=Theta(N)."

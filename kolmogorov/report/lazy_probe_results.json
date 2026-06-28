@@ -1,0 +1,20 @@
+{
+  "model": "gpt2",
+  "n_tokens": 2048,
+  "n_layers": 12,
+  "lock_depth_frac": {
+    "mean": 0.963,
+    "median": 1.0,
+    "p90": 1.0
+  },
+  "frac_locked_by_half_depth": 0.025,
+  "frac_locked_by_75pct_depth": 0.06,
+  "margin_logit": {
+    "median": 0.798,
+    "p10": 0.11
+  },
+  "entropy_nats": {
+    "mean": 3.962,
+    "median": 4.01
+  }
+}

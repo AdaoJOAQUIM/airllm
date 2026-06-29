@@ -1,0 +1,681 @@
+# techniques.yaml — Phase 0 : triage des 100 techniques de compression
+#
+# Mission : fork AirLLM = pipeline de codecs branchable (streaming disque->GPU
+# couche par couche). On ne garde ACTIF que ce qui est lossless + composable +
+# rapide. Le reste = registre documenté ou hors-scope. Aucun code mort.
+#
+# Colonnes :
+#   nom               : technique
+#   type              : codec_lossless | quantization_lossy | preprocessing_offline |
+#                       architecture_remplacement | theorie_non_codable | non_verifie
+#   composable_airllm : oui_plugin (hot-path load/KV) | oui_offline (pretraitement) | non
+#   statut_reference  : verifie | introuvable | futur_suspect | source_douteuse
+#   verdict           : implementer | documenter | hors_scope | rejeter
+#   note              : justification d'UNE ligne
+#
+# Cutoff de verification : Hugging Face papers (25 juin 2026) + arxiv.org direct.
+# IMPORTANT : "lossless" ici = bit-exact sur les poids OU logits identiques a
+# tolerance flottante pres. Round-trip OBLIGATOIRE avant toute implementation.
+
+meta:
+  base: AirLLM (layer streaming, safetensors par couche)
+  invariant: lossless = round-trip bit-exact, sinon REJETE
+  resume_verdicts:                # comptage verifie ligne a ligne = 100
+    implementer_plugin: 8        # ZipNN, NeuZip, source-coding, arith, ANS, MoE exact, AirLLM, KV
+    documenter: 64               # reel mais hors hot-path / theorie / offline / pruning / quant lossy
+    hors_scope: 28               # autres modeles (J), hypernets (F), systemes/memoire orthogonaux
+    rejeter: 0                   # aucune fausse-lossless a rejeter d'office ; les lossy sont 'documenter' derriere flag
+  alerte_references:
+    - "Nacrith : URL 'arxiv-troller.com' = FAUSSE. Papier reel = arXiv:2602.19626."
+    - "StateSMix (2605.02904) : reel mais mono-auteur/non relu -> documenter."
+    - "Chained Lightweight Predictors (2604.15472) : reel (Kim & Belyaev, sous review)."
+
+# =====================================================================
+# A. Compression SANS PERTE des modeles IA (priorite maximale)
+# =====================================================================
+A:
+  - nom: ZipNN (Lossless Compression for AI Models)
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie          # arXiv:2411.05239
+    verdict: implementer
+    note: Codec lossless concu pour poids NN (~50% sur fp/bf16) ; cible exacte du fork.
+  - nom: Lossless Compression of Deep Neural Networks (suppression composants redondants)
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2001.00218
+    verdict: documenter
+    note: Lossless par equivalence fonctionnelle mais transforme l'archi ; offline, pas hot-path.
+  - nom: "'Lossless' DNN Compression via Neural Tangent Kernel (NTK)"
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2403.00258
+    verdict: documenter
+    note: Reparametrage mathematique theorique ; "lossless" au sens NTK, pas un codec d'octets.
+  - nom: NeuZip (Memory-Efficient Training/Inference, Dynamic Compression)
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie          # arXiv:2410.20650
+    verdict: implementer
+    note: Mode lossless = compression entropique de l'exposant ; s'insere dans load/decode.
+  - nom: Lossless Weight Matrix Representations using Source Coding
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: implementer
+    note: Source coding direct des poids ; meme famille que ZipNN, round-trip exact.
+  - nom: Entropy-Constrained Neural Network Compression
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Contrainte d'entropie a l'entrainement (lossy vs modele original) ; offline.
+  - nom: Model Compression by Entropy Penalized Reparameterization
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:1906.06624
+    verdict: documenter
+    note: Reparametrage penalise a l'entrainement ; pas un codec post-hoc lossless.
+  - nom: Deep Compression (Pruning + Quantization + Huffman)
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:1510.00149
+    verdict: documenter
+    note: Pipeline lossy ; SEULE l'etape Huffman est un primitive entropique lossless reutilisable.
+  - nom: Learning both Weights and Compression Codes
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Codes appris a l'entrainement ; necessite reentrainement, hors fork.
+  - nom: Minimum Description Length (MDL) for Neural Networks
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Cadre theorique (doublon de B1) ; oriente le choix de codec, n'est pas du code.
+
+# =====================================================================
+# B. Theorie de l'information
+# =====================================================================
+B:
+  - nom: Minimum Description Length Principle (MDL)
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Cadre ; borne theorique de compressibilite, pas un codec.
+  - nom: Information Bottleneck
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie          # physics/0004057
+    verdict: documenter
+    note: Cadre d'analyse (lossy par essence) ; non implementable comme plugin lossless.
+  - nom: Variational Information Bottleneck
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1612.00410
+    verdict: documenter
+    note: Objectif d'entrainement lossy ; hors invariant.
+  - nom: Rate-Distortion Theory for Neural Networks
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Theorie du compromis debit/distorsion (= lossy) ; cadre, pas code.
+  - nom: Information-Theoretic Limits of Deep Learning
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Bornes theoriques ; aucune implementation.
+  - nom: Kolmogorov Complexity and Neural Networks
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Complexite de Kolmogorov INCALCULABLE ; inspiration, jamais code.
+  - nom: Algorithmic Information Theory (AIT)
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Cadre (Solomonoff/Chaitin) ; non codable.
+  - nom: Universal Coding
+    type: theorie_non_codable
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Base theorique des codeurs adaptatifs (ANS/arith) ; informe B9/B10, pas un plugin.
+  - nom: Arithmetic Coding
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: implementer
+    note: Moteur entropique lossless ; backend reutilisable pour tous les codecs.
+  - nom: Asymmetric Numeral Systems (ANS)
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie          # Duda 2013, arXiv:1311.2540
+    verdict: implementer
+    note: Moteur entropique rapide (rANS/tANS) ; backend du pipeline, utilise par ZipNN.
+
+# =====================================================================
+# C. Compression neuronale avec modeles predictifs
+# =====================================================================
+C:
+  - nom: DeepZip (Lossless via RNN)
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:1811.08162
+    verdict: documenter
+    note: Lossless mais predicteur RNN par symbole = trop lent pour streaming de poids sur Pi.
+  - nom: DZip (General-Purpose Lossless, NN modeling)
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:1911.03572
+    verdict: documenter
+    note: Idem DeepZip ; excellent ratio donnees, debit decode incompatible hot-path.
+  - nom: Neural Network Compression with Prediction Models
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Famille predictive lossless ; offline / recherche.
+  - nom: Neural Autoregressive Compression
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Decodage sequentiel autoregressif = lent ; inadapte au chargement de couches.
+  - nom: Transformer-based Lossless Compression
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Predicteur Transformer par symbole ; cout > lecture brute des octets.
+  - nom: Nacrith (Neural Lossless via Ensemble Context Modeling)
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: source_douteuse  # URL arxiv-troller.com FAUSSE ; papier reel = arXiv:2602.19626
+    verdict: documenter
+    note: PAPIER REEL (2602.19626) mais URL fournie fabriquee ; mono-auteur, non eprouve.
+  - nom: StateSMix (Online Lossless via Mamba SSM + n-gram mixing)
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: futur_suspect    # arXiv:2605.02904 REEL mais 2026, mono-auteur, non relu
+    verdict: documenter
+    note: Reel mais recent/non valide par les pairs ; ne pas implementer comme codec de prod.
+  - nom: Lossless Compression via Chained Lightweight Neural Predictors
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2604.15472 (Kim & Belyaev, sous review)
+    verdict: documenter
+    note: Reel, predicteurs legers chaines ; prometteur mais sous review -> surveiller, pas prod.
+  - nom: Neural Probability Models for Compression
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Modele de probabilite neuronal ; meme limite de debit que C1-C5.
+  - nom: Context Mixing Compression (PAQ/cmix)
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Ratio extreme mais ultra-lent ; utile comme reference de borne, pas hot-path.
+
+# =====================================================================
+# D. Bits-back coding
+# =====================================================================
+D:
+  - nom: Bits-Back Coding
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossless pour donnees via modele latent ; suppose un modele genere les donnees, pas applicable aux poids bruts.
+  - nom: BB-ANS
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1901.04866
+    verdict: documenter
+    note: Bits-back + ANS sur VAE ; necessite un modele latent des poids, non disponible.
+  - nom: "Bit-Swap (Recursive Bits-Back)"
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1905.06845
+    verdict: documenter
+    note: Hierarchique latent ; idem, inadapte a la compression de poids pretraines.
+  - nom: Variational Compression Networks
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Compression via inference variationnelle ; lossy en pratique pour des poids.
+  - nom: Lossless Compression with Latent Variable Models
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Suppose un modele latent ; hors cas "compresser des safetensors existants".
+  - nom: Hierarchical Latent Variable Compression
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Idem, profondeur hierarchique ; non pertinent pour le fork.
+  - nom: VAEs as Compressors
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Compresse des donnees, pas des poids de LLM ; orthogonal.
+  - nom: Neural Compression with Latent Representations
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Domaine image/donnees ; pas un codec de poids.
+  - nom: Stochastic Compression Models
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Famille stochastique ; non deterministe -> incompatible round-trip bit-exact simple.
+  - nom: Generative Compression
+    type: quantization_lossy
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Reconstruction generative = LOSSY ; viole l'invariant.
+
+# =====================================================================
+# E. Compression des poids par structure mathematique (low-rank)
+# =====================================================================
+E:
+  - nom: Singular Value Decomposition (SVD)
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: LOSSY si tronquee (sinon zero gain) ; pretraitement offline derriere flag, jamais lossless par defaut.
+  - nom: Tensor Decomposition
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Famille low-rank lossy ; offline, mesurer Delta-perplexite.
+  - nom: Tucker Decomposition
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy ; offline.
+  - nom: CP Decomposition
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy ; offline.
+  - nom: Tensor Train Decomposition
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:1509.06569
+    verdict: documenter
+    note: Lossy (rang tronque) ; offline, fort potentiel sur couches denses.
+  - nom: Kronecker Factorization
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy ; offline.
+  - nom: Block Low Rank Compression
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy par blocs ; offline.
+  - nom: Circulant Neural Networks
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Structure circulante imposee a l'entrainement ; pas applicable a un modele existant.
+  - nom: Fastfood Transform
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Projection structuree a l'entrainement ; hors fork.
+  - nom: Hadamard Transform Compression
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Transformee orthogonale (lossless en soi) mais ne compresse pas seule ; utile en pre-codec.
+
+# =====================================================================
+# F. Representation compacte des reseaux (post-Transformer)
+# =====================================================================
+F:
+  - nom: HyperNetworks
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1609.09106
+    verdict: hors_scope
+    note: Genere les poids via un reseau ; necessite reentrainement, pas un codec.
+  - nom: Weight Generation Networks
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Idem HyperNetworks ; hors fork.
+  - nom: Neural Parameter Generators
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Generateur de parametres ; reentrainement requis.
+  - nom: Implicit Neural Representations (INR)
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Represente les poids comme fonction (lossy, fit) ; pas drop-in lossless.
+  - nom: Coordinate Networks
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Sous-famille INR ; hors fork.
+  - nom: Neural Fields
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Idem INR ; hors fork.
+  - nom: Deep Decoder
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1810.03982
+    verdict: hors_scope
+    note: Decodeur sous-parametre ; reconstruction lossy.
+  - nom: Learned Parameter Sharing
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Partage appris (lossy) ; offline.
+  - nom: Weight Tying
+    type: codec_lossless
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Partage exact (embed/lm_head) ; deja gere par tie_weights, lossless mais gain marginal.
+  - nom: Dynamic Weight Generation
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Genere les poids a la volee ; reentrainement requis.
+
+# =====================================================================
+# G. Compression extreme LLM (sparsite / MoE)
+# =====================================================================
+G:
+  - nom: SparseGPT
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2301.00774
+    verdict: documenter
+    note: Pruning one-shot LOSSY ; Phase 5 offline, mesurer accuracy avant/apres.
+  - nom: Wanda Pruning
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2306.11695
+    verdict: documenter
+    note: Pruning lossy sans reentrainement ; offline.
+  - nom: Movement Pruning
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2005.07683
+    verdict: documenter
+    note: Pruning lossy a l'entrainement ; offline.
+  - nom: Lottery Ticket Hypothesis
+    type: preprocessing_offline
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1803.03635
+    verdict: documenter
+    note: Hypothese de sous-reseaux ; necessite reentrainement, pas un codec.
+  - nom: Dynamic Sparsity
+    type: preprocessing_offline
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Sparsite dynamique (lossy si seuil) ; offline.
+  - nom: Mixture of Experts Compression
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: implementer
+    note: STREAMING D'EXPERTS ROUTES = lossless EXACT (experts non routes ont gating nul) ; pari principal.
+  - nom: Switch Transformers
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2101.03961
+    verdict: documenter
+    note: Archi MoE specifique ; pertinente si le modele cible est Switch, sinon reference.
+  - nom: Conditional Computation
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: documenter
+    note: Principe sous-jacent du streaming MoE exact (cf G6) ; meme mecanisme lossless.
+  - nom: Token Routing
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: documenter
+    note: Routage = brique du MoE exact (G6) ; doit reproduire le top-k de reference (depart. egalites).
+  - nom: Adaptive Computation Time
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1603.08983
+    verdict: documenter
+    note: Halting adaptatif a l'entrainement ; pas un codec de poids.
+
+# =====================================================================
+# H. Compression ultra-basse precision (LOSSY sauf entrainement natif)
+# =====================================================================
+H:
+  - nom: Binary Neural Networks
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: LOSSY sauf entrainement binaire natif ; tier lossy Phase 4 derriere flag.
+  - nom: Ternary Neural Networks
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy ; flag explicite, logue Delta-perplexite.
+  - nom: XNOR-Net
+    type: quantization_lossy
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1603.05279
+    verdict: documenter
+    note: Binarisation a l'entrainement ; lossy.
+  - nom: DoReFa-Net
+    type: quantization_lossy
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:1606.06160
+    verdict: documenter
+    note: Quant. basse precision a l'entrainement ; lossy.
+  - nom: BitNet
+    type: quantization_lossy
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2310.11453
+    verdict: documenter
+    note: 1-bit UNIQUEMENT si entraine ainsi ; AUCUNE conversion lossless 16->1 bit (ne pas inventer).
+  - nom: 1-bit LLM (BitNet b1.58)
+    type: quantization_lossy
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2402.17764
+    verdict: documenter
+    note: Necessite modele entraine en 1.58-bit ; pas applicable a un fp16 existant.
+  - nom: PB-LLM
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie          # arXiv:2310.00034
+    verdict: documenter
+    note: Binarisation partielle lossy ; tier optionnel.
+  - nom: Extreme Quantization
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Famille lossy ; flag explicite.
+  - nom: Vector Quantization (VQ)
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy (codebook) ; offline tier. NB : VQ peut etre lossless si codebook exact -> rare.
+  - nom: Product Quantization (PQ)
+    type: quantization_lossy
+    composable_airllm: oui_offline
+    statut_reference: verifie
+    verdict: documenter
+    note: Lossy ; utile surtout pour memoire externe / FAISS, pas pour poids sans perte.
+
+# =====================================================================
+# I. Compression + memoire externe (architecture type AirLLM)
+# =====================================================================
+I:
+  - nom: AirLLM
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: implementer
+    note: BASE du fork (streaming lossless par couche) ; deja present.
+  - nom: FlexGen
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2303.06865
+    verdict: documenter
+    note: Systeme d'offload concurrent ; source d'inspiration (scheduling I/O), pas un plugin.
+  - nom: DeepSpeed ZeRO-Inference
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Offload partitionne ; alternative systeme, pas un codec branchable.
+  - nom: Offloading Neural Networks
+    type: codec_lossless
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: documenter
+    note: Principe general deja incarne par AirLLM.
+  - nom: Paging Neural Networks
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie
+    verdict: documenter
+    note: mmap/pagination = lossless par construction ; brique I/O (cf plan integration), pas un codec.
+  - nom: KV Cache Compression
+    type: codec_lossless
+    composable_airllm: oui_plugin
+    statut_reference: verifie          # ex. arXiv:2604.15356 (lossless KV) + familles lossy
+    verdict: implementer
+    note: Axe KVCacheCodec dedie ; variantes lossless (dedup/delta) prioritaires, lossy derriere flag.
+  - nom: Retrieval-Augmented Generation Compression
+    type: preprocessing_offline
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Compresse le contexte/retrieval, pas les poids ; orthogonal au fork.
+  - nom: Vector Database Memory
+    type: preprocessing_offline
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Memoire externe applicative ; hors compression de modele.
+  - nom: FAISS
+    type: preprocessing_offline
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Lib d'index ANN ; orthogonal.
+  - nom: Learned Memory Systems
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Memoire apprise (archi) ; hors fork.
+
+# =====================================================================
+# J. Nouvelles architectures plus efficaces (= AUTRES MODELES, pas des add-ons)
+# =====================================================================
+J:
+  - nom: Mamba (State Space Models)
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2312.00752
+    verdict: hors_scope
+    note: Modele non-Transformer ; AirLLM suppose des couches Transformer -> remplacement, pas plugin.
+  - nom: RWKV
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2305.13048
+    verdict: hors_scope
+    note: Architecture RNN-Transformer alternative ; autre modele.
+  - nom: RetNet
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2307.08621
+    verdict: hors_scope
+    note: Retention au lieu d'attention ; autre modele.
+  - nom: Linear Attention
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Mecanisme d'attention alternatif ; necessite modele compatible.
+  - nom: Hyena
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2302.10866
+    verdict: hors_scope
+    note: Convolutions longues ; autre modele.
+  - nom: S4 (Structured State Space)
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2111.00396
+    verdict: hors_scope
+    note: SSM structure ; autre modele.
+  - nom: LongNet
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2307.02486
+    verdict: hors_scope
+    note: Attention dilatee pour contexte long ; archi specifique.
+  - nom: Performer
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # arXiv:2009.14794
+    verdict: hors_scope
+    note: Attention par features aleatoires ; autre modele.
+  - nom: Efficient Transformers (famille)
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie          # survey arXiv:2009.06732
+    verdict: hors_scope
+    note: Famille d'architectures ; pas un codec.
+  - nom: Neural Cellular Automata (representation distribuee)
+    type: architecture_remplacement
+    composable_airllm: non
+    statut_reference: verifie
+    verdict: hors_scope
+    note: Paradigme distribue experimental ; hors fork.

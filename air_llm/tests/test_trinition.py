@@ -261,5 +261,28 @@ class TestAnomalousDiffusion(unittest.TestCase):
         self.assertLess(abs(H_hat - 0.8), 0.12)
 
 
+class TestAndiEval(unittest.TestCase):
+    """Real-benchmark gate on the official AnDi generator. Skipped when
+    andi_datasets is not installed."""
+
+    def setUp(self):
+        try:
+            import numpy  # noqa: F401
+            import andi_datasets  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy / andi_datasets not installed")
+
+    def test_fbm_fractional_in_reasonable_range(self):
+        from trinition import andi_eval as ae
+        pos, alpha = ae.generate_andi(2, [0.5, 1.0, 1.5], n_per=40, T=64, seed=0)
+        a_hat = ae.estimate_alpha_fractional(pos)
+        mae = float(__import__("numpy").mean(abs(a_hat - alpha)))
+        # On its home physics (fBM) the 1-param estimator should be well below
+        # the trivial "always guess 1.0" baseline error.
+        trivial = float(__import__("numpy").mean(abs(1.0 - alpha)))
+        self.assertLess(mae, trivial)
+        self.assertLess(mae, 0.4)
+
+
 if __name__ == "__main__":
     unittest.main()

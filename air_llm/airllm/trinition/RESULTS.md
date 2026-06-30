@@ -193,5 +193,45 @@ data, beating the AnDi deep-learning state of the art, a finding about a real
 system, statistical rigor, domain co-authors) — the hard 90% that cannot be done
 in this sandbox.
 
+## AnDi Challenge (real benchmark) — the publishability gate
+
+`andi_eval.py` runs on the **official** AnDi anomalous-diffusion generator
+(`andi_datasets`, Muñoz-Gil et al., *Nature Communications* 2021), Task 1
+(anomalous-exponent inference, metric = MAE on α), across all five canonical
+diffusion models. It compares the 1-parameter fractional estimator to the
+classical TA-MSD baseline. Reproduce (needs `pip install andi-datasets`):
+
+```bash
+cd air_llm/airllm && python -c "import trinition.andi_eval as ae; ae.main(['--seed','0'])"
+```
+
+Full run (seed 0, T=128, 120 trajectories per valid exponent):
+
+| model | n | MAE fractional [1 param] | MAE TA-MSD |
+|---|---|---|---|
+| ATTM | 480 | 0.402 | 0.288 |
+| CTRW | 480 | 0.508 | 0.316 |
+| **fBM** | 600 | **0.172** | 0.176 |
+| LW | 360 | 0.383 | 0.221 |
+| **SBM** | 600 | **0.392** | 0.396 |
+| **mean** | | 0.371 | 0.279 |
+
+**Verdict (the gate from `NATURE_PATH.md`, run honestly).**
+- On **fBM** — the fractional estimator's home physics — a *single* parameter
+  matches the classical TA-MSD baseline (0.172 vs 0.176), and on **SBM** it is
+  comparable. These are the Gaussian, self-similar, genuinely long-memory
+  regimes: the fractional algebra is the right physics there.
+- On **CTRW / ATTM / LW** the fractional estimator is clearly worse, because
+  those processes are driven by waiting-time / step-length statistics, not
+  Gaussian long memory — the fBM-calibrated order is mis-specified. This is the
+  **regime map**: it states precisely which anomalous-diffusion physics the
+  fractional operator captures and which it does not.
+- Neither classical estimator beats the AnDi **deep-learning** winners (trained
+  conv/recurrent nets), which we cannot reproduce in a numpy sandbox. So this is
+  **not** a finished Nature result: it establishes the interpretable-baseline
+  performance and the regime map that an interpretability/efficiency argument
+  would build on, and it tells us honestly that the surviving signal is real but
+  *narrow* — strong only where the data is Gaussian long-memory.
+
 > The point of this file is not to win an argument. It is to record what the
 > experiments returned, including the parts that contradict the hypothesis.

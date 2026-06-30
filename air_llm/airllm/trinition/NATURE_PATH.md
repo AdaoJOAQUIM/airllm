@@ -84,17 +84,36 @@ domain collaborator.
 5. **Domain co-authors and validation.** *Nature* family expects domain experts
    to vouch for the science.
 
-## The honest gate
+## The honest gate — PARTIALLY RUN (see `andi_eval.py` / `RESULTS.md`)
 
 Before writing anything, run the only experiment that decides viability:
 
-- [ ] Take the **AnDi challenge dataset** (public). Compare the fractional
-      estimator to the published deep-learning winners on exponent inference,
-      at matched data budgets, with interpretability as the differentiator.
-- [ ] If the fractional approach is competitive **and** adds interpretability /
-      data-efficiency the deep models lack → there is a Nature-family paper, with
-      a domain collaborator. If it is merely "another estimator, slightly worse"
-      → it is not. Decide there, not after months.
+- [x] **Run on the real AnDi generator.** Done: `andi_eval.py` uses the official
+      `andi_datasets` package over all five diffusion models. Outcome: on **fBM**
+      the 1-parameter fractional estimator matches the classical TA-MSD baseline
+      (MAE 0.172 vs 0.176) and is comparable on **SBM**; it is clearly worse on
+      CTRW/ATTM/LW. A clean **regime map**: the fractional algebra is the right
+      physics for Gaussian long-memory anomalous diffusion only.
+- [ ] **Compare to the AnDi deep-learning winners.** NOT done — needs a trained
+      GPU model. This is the real remaining gate. The honest question becomes:
+      *does the interpretability of a single physical parameter `d` (a generative
+      model, not just an exponent readout) buy anything the black-box winners
+      lack* — calibration, uncertainty, data-efficiency, extrapolation?
+- [ ] If yes → a Nature-family paper with a domain collaborator, framed around
+      **interpretable, parameter-light inference** with a characterized regime of
+      validity. If the only story is "matches a classical baseline, loses to deep
+      nets" → it is a solid workshop/methods note, not Nature. Decide there.
+
+### What the gate result means, bluntly
+
+The surviving signal is **real but narrow**: the fractional operator is the
+correct, parameter-light model exactly when the physics is Gaussian long memory
+(fBM/SBM), and mis-specified otherwise. That is a publishable *scientific*
+statement — but as a regime characterization / interpretable baseline, not as a
+method that beats the state of the art. A Nature-family outcome now hinges on the
+interpretability-vs-deep-nets comparison and a real-data finding, with a domain
+collaborator. The math, the method, and the regime map are done; the
+state-of-the-art comparison and the wet-lab science are not.
 
 ## Bottom line
 

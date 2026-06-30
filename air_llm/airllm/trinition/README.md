@@ -127,6 +127,17 @@ Methods, via the AnDi challenge), and the hard 90% — real data, beating the
 AnDi state of the art, a finding about a real system, domain co-authors — that
 cannot be done in this sandbox.
 
+`andi_eval.py` runs the gate on the **official AnDi benchmark** (`andi_datasets`,
+*Nature Communications* 2021), Task 1, across all five diffusion models. Result:
+the 1-parameter fractional estimator matches the classical TA-MSD baseline on
+fBM/SBM (Gaussian long memory) and is mis-specified on CTRW/ATTM/LW — a clean
+regime map, not a state-of-the-art win (see `RESULTS.md`).
+
+```bash
+pip install andi-datasets
+cd air_llm/airllm && python -c "import trinition.andi_eval as ae; ae.main(['--seed','0'])"
+```
+
 ## Notes / further reading
 
 The naming follows discussions of Abdon Atangana's work on 3D hypercomplex

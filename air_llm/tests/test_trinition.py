@@ -166,6 +166,23 @@ class TestBenchmark(unittest.TestCase):
         for alpha, mse in sweep:
             self.assertGreaterEqual(mse, 0.0)
 
+    def test_learned_algebra_trains_and_dim4_beats_dim3(self):
+        # Short training run: the learned 4D bilinear fold should already be
+        # clearly ahead of the 3D one, since it can rediscover the (4D)
+        # quaternion product while 3D structurally cannot.
+        import numpy as np
+        from trinition import benchmark as bm
+        from trinition import learn_algebra as la
+        rng = np.random.default_rng(0)
+        seqs_tr, y_tr = bm.make_task_a(800, 5, rng)
+        seqs_te, y_te = bm.make_task_a(500, 5, rng)
+        mse3, hist3 = la.train_learned_algebra(
+            3, seqs_tr, y_tr, seqs_te, y_te, epochs=200, lr=5e-3, seed=0)
+        mse4, hist4 = la.train_learned_algebra(
+            4, seqs_tr, y_tr, seqs_te, y_te, epochs=200, lr=5e-3, seed=0)
+        self.assertLess(hist4[-1], hist4[0])      # it actually trained
+        self.assertLess(mse4, mse3)               # extra dimension helps
+
 
 if __name__ == "__main__":
     unittest.main()

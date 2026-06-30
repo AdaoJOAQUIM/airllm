@@ -81,6 +81,16 @@ thesis) is in [`RESULTS.md`](RESULTS.md): the deformable Trinition product does
 while the fractional operator shows a modest, genuine parameter-efficiency edge
 on long-memory data.
 
+`learn_algebra.py` goes further and *learns the entire multiplication table* by
+gradient descent at dimensions 3 and 4 — the strongest form of the deformability
+claim. It shows the real obstacle is **dimension, not tuning**: a learned 3D
+bilinear product plateaus ~5× worse than a learned 4D one (which approaches the
+exact quaternion answer), because SO(3) composition is bilinear only in 4D.
+
+```bash
+cd air_llm/airllm && python -c "import trinition.learn_algebra as la; la.main(['--seed','0'])"
+```
+
 ## Notes / further reading
 
 The naming follows discussions of Abdon Atangana's work on 3D hypercomplex

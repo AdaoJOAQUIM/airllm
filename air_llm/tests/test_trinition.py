@@ -231,5 +231,35 @@ class TestLongMemory(unittest.TestCase):
         self.assertLess(mse_s2e, mse_f2)
 
 
+class TestAnomalousDiffusion(unittest.TestCase):
+    """The Nature-family seed: a 1-parameter fractional operator recovers the
+    physical Hurst exponent of exact fractional-Gaussian-noise trajectories."""
+
+    def setUp(self):
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy not installed")
+
+    def test_frac_diff_coeffs_recurrence(self):
+        import numpy as np
+        from trinition import anomalous_diffusion as ad
+        # (1-L)^d at d=1 is the first difference: pi = [1, -1, 0, 0, ...]
+        pi = ad.frac_diff_coeffs(1.0, 4)
+        self.assertTrue(np.allclose(pi, [1, -1, 0, 0, 0], atol=1e-9))
+
+    def test_recovers_hurst_exponent(self):
+        import numpy as np
+        from trinition import anomalous_diffusion as ad
+        rng = np.random.default_rng(0)
+        # A clear long-memory case: recovered H should be in the right ballpark
+        # and well above the H=0.5 (memoryless) null.
+        X = ad.sample_fgn(160, 200, H=0.8, rng=rng)
+        d_hat, _ = ad.fit_frac_order(X, memory=48)
+        H_hat = d_hat + 0.5
+        self.assertGreater(H_hat, 0.7)
+        self.assertLess(abs(H_hat - 0.8), 0.12)
+
+
 if __name__ == "__main__":
     unittest.main()

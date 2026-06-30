@@ -108,6 +108,25 @@ params vs `Θ(log L)` SSM modes for power-law memory, with the regime where it
 fails), and [`PAPER_OUTLINE.md`](PAPER_OUTLINE.md) lays out the path to a
 publishable result — including an honest gating checklist that says where to quit.
 
+## Anomalous diffusion: where the algebra is literal physics
+
+`anomalous_diffusion.py` is the one setting where "the right algebra" is not a
+metaphor — it is the governing law of anomalous transport. A single fractional
+parameter recovers the physical Hurst exponent of fractional-Brownian-motion
+trajectories (mean error ≈ 0.055) and matches a 10-parameter AR model. This is
+the only result here with a path to the *Nature family*.
+
+```bash
+cd air_llm/airllm && python -c "import trinition.anomalous_diffusion as ad; ad.main(['--seed','0'])"
+```
+
+[`NATURE_PATH.md`](NATURE_PATH.md) is the straight answer about *Nature*
+specifically: why the ML results are NeurIPS-shaped not Nature-shaped, why
+anomalous diffusion is the genuine route (Nature Communications / Physics /
+Methods, via the AnDi challenge), and the hard 90% — real data, beating the
+AnDi state of the art, a finding about a real system, domain co-authors — that
+cannot be done in this sandbox.
+
 ## Notes / further reading
 
 The naming follows discussions of Abdon Atangana's work on 3D hypercomplex

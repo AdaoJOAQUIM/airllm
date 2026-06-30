@@ -158,5 +158,40 @@ parameter-efficient inductive bias *specifically for polynomial long memory*,
 with an honestly reported failure regime — exactly what `THEORY.md` predicts
 (`O(1)` vs `Θ(log L)` parameters), and what `PAPER_OUTLINE.md` builds on.
 
+## Anomalous diffusion — recovering a physical exponent (the Nature-family seed)
+
+The one setting where "the right algebra" is literal physics, not metaphor:
+anomalous diffusion, where fractional dynamics are the *governing law*.
+`anomalous_diffusion.py` generates exact fractional Gaussian noise (the
+increments of fractional Brownian motion) and asks a one-parameter fractional
+operator to recover the physical Hurst exponent `H`. Reproduce:
+
+```bash
+cd air_llm/airllm && python -c "import trinition.anomalous_diffusion as ad; ad.main(['--seed','0'])"
+```
+
+Full run (seed 0, length 256, 400 trajectories):
+
+| true H | fitted d | H_hat = d+½ | \|H_hat−H\| | MSE frac [1p] | MSE AR(5) | MSE AR(10) |
+|---|---|---|---|---|---|---|
+| 0.60 | 0.125 | 0.625 | 0.025 | 0.9757 | 0.9744 | 0.9734 |
+| 0.70 | 0.242 | 0.742 | 0.042 | 0.8801 | 0.8850 | 0.8827 |
+| 0.80 | 0.365 | 0.865 | 0.065 | 0.6998 | 0.7080 | 0.7020 |
+| 0.90 | 0.490 | 0.990 | 0.090 | 0.4126 | 0.4216 | 0.4151 |
+
+Mean `|H_hat − H| ≈ 0.055`. A **single** fractional-order parameter recovers the
+physical memory exponent and matches the prediction error of a 10-parameter AR
+model — because the operator *is* the generating physics (fGn = ARFIMA(0, H−½, 0)
+= fractional calculus). There is an honest **upward bias growing with H** (e.g.
+0.99 vs 0.90), a known estimator property that a real paper must bias-correct.
+
+This is the only result here with a path to the Nature family (Nature
+Communications / Physics / Methods, via the AnDi anomalous-diffusion community) —
+and it is only a synthetic-physics *seed*. `NATURE_PATH.md` states plainly what
+real publication additionally requires (experimental single-particle-tracking
+data, beating the AnDi deep-learning state of the art, a finding about a real
+system, statistical rigor, domain co-authors) — the hard 90% that cannot be done
+in this sandbox.
+
 > The point of this file is not to win an argument. It is to record what the
 > experiments returned, including the parts that contradict the hypothesis.

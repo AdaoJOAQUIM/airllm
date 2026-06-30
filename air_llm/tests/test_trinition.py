@@ -284,5 +284,41 @@ class TestAndiEval(unittest.TestCase):
         self.assertLess(mae, 0.4)
 
 
+class TestAndiClassify(unittest.TestCase):
+    """Interpretable diffusion-model classification on the official AnDi data.
+    Skipped when andi_datasets or scikit-learn is missing."""
+
+    def setUp(self):
+        try:
+            import numpy  # noqa: F401
+            import andi_datasets  # noqa: F401
+            import sklearn  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy / andi_datasets / scikit-learn not installed")
+
+    def test_features_shape_and_finiteness(self):
+        import numpy as np
+        from trinition import andi_classify as ac
+        pos = ac._gen(2, [0.5, 1.5], n_per=20, T=64, seed=0)
+        F = ac.featurize(pos, memory=16)
+        self.assertEqual(F.shape, (40, 8))
+        self.assertTrue(np.all(np.isfinite(F)))
+
+    def test_classifier_beats_chance(self):
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import accuracy_score
+        from trinition import andi_classify as ac
+        X, y = ac.build(n_per=40, T=64, seed=0)
+        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3,
+                                              random_state=0, stratify=y)
+        sc = StandardScaler().fit(Xtr)
+        lr = LogisticRegression(max_iter=2000).fit(sc.transform(Xtr), ytr)
+        acc = accuracy_score(yte, lr.predict(sc.transform(Xte)))
+        self.assertGreater(acc, 0.45)        # well above 0.20 chance
+
+
 if __name__ == "__main__":
     unittest.main()

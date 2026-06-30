@@ -91,6 +91,23 @@ exact quaternion answer), because SO(3) composition is bilinear only in 4D.
 cd air_llm/airllm && python -c "import trinition.learn_algebra as la; la.main(['--seed','0'])"
 ```
 
+## The surviving signal: fractional memory vs. a state-space baseline
+
+`benchmark_longmemory.py` is the decisive test for the one positive result —
+does a *learnable* fractional order hold up against a diagonal state-space model
+(the S4/S4D core), not just a naive AR window? It does, in a scoped way: a
+single fractional-order parameter matches a ~3× larger SSM on polynomial
+long-memory data and loses on exponential-memory data (an honest cross-over).
+
+```bash
+cd air_llm/airllm && python -c "import trinition.benchmark_longmemory as bm; bm.main(['--seed','0'])"
+```
+
+[`THEORY.md`](THEORY.md) proves the underlying separation (`O(1)` fractional
+params vs `Θ(log L)` SSM modes for power-law memory, with the regime where it
+fails), and [`PAPER_OUTLINE.md`](PAPER_OUTLINE.md) lays out the path to a
+publishable result — including an honest gating checklist that says where to quit.
+
 ## Notes / further reading
 
 The naming follows discussions of Abdon Atangana's work on 3D hypercomplex

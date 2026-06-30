@@ -116,5 +116,47 @@ the correct dimension + bilinear structure — "hypercomplex" adds nothing beyon
 that. The only positive signal in the whole study remains the fractional
 (Atangana) operator on long-memory data (Task B): a real, modest, bounded gain.
 
+## Fractional memory vs. a real state-space baseline (the decisive test)
+
+The earlier Task B compared the fractional operator only to a naive AR window.
+The honest gate is whether it survives against a real long-memory model — a
+diagonal **state-space model** (the S4/S4D core). `benchmark_longmemory.py` runs
+this at equal-ish parameter budgets on two memory regimes, with a **learnable**
+fractional order `q`. Reproduce:
+
+```bash
+cd air_llm/airllm && python -c "import trinition.benchmark_longmemory as bm; bm.main(['--seed','0'])"
+```
+
+Full run (seed 0, T=64, train=4000), test MSE:
+
+**`power` regime — polynomial long memory (fractional's home):**
+
+| model | #params | test MSE |
+|---|---|---|
+| **fractional (learned q=0.476)** | **4** | **0.0035** |
+| diagonal SSM (state=2) | 7 | 0.0061 |
+| diagonal SSM (state=4) | 13 | 0.0028 |
+| diagonal SSM (state=8) | 25 | 0.0028 |
+| linear AR(k=8) | 9 | 0.3163 |
+
+**`exp` regime — exponential memory (SSM's home):**
+
+| model | #params | test MSE |
+|---|---|---|
+| fractional (learned q=0.311) | 4 | 0.0977 |
+| **diagonal SSM (state=8)** | 25 | **0.0024** |
+| linear AR(k=8) | 9 | 0.1849 |
+
+**Verdict.** A **single** learnable memory parameter (the fractional order) on
+the `power` regime matches a diagonal SSM that needs **~3× more parameters**
+(state=4, 13 params) and beats the equal-budget SSM(state=2) — it sits on the
+SSM's Pareto frontier at the cheap end. On the `exp` regime the separation
+**reverses**: the SSM is in its exact territory and the fractional power-law
+kernel cannot represent a pure exponential. This cross-over is the result: a
+parameter-efficient inductive bias *specifically for polynomial long memory*,
+with an honestly reported failure regime — exactly what `THEORY.md` predicts
+(`O(1)` vs `Θ(log L)` parameters), and what `PAPER_OUTLINE.md` builds on.
+
 > The point of this file is not to win an argument. It is to record what the
 > experiments returned, including the parts that contradict the hypothesis.

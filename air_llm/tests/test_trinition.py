@@ -184,5 +184,52 @@ class TestBenchmark(unittest.TestCase):
         self.assertLess(mse4, mse3)               # extra dimension helps
 
 
+class TestLongMemory(unittest.TestCase):
+    """The decisive fractional-vs-SSM experiment. Asserts the cross-over: the
+    1-parameter fractional order should win the power-law regime and lose the
+    exponential regime -- the honest, scoped result."""
+
+    def setUp(self):
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy not installed")
+
+    def test_gl_weights_grad_matches_finite_difference(self):
+        import numpy as np
+        from trinition import benchmark_longmemory as lm
+        order, n = -0.4, 20
+        w, dw = lm._gl_weights_grad(order, n)
+        eps = 1e-6
+        wp, _ = lm._gl_weights_grad(order + eps, n)
+        wm, _ = lm._gl_weights_grad(order - eps, n)
+        fd = (wp - wm) / (2 * eps)
+        self.assertTrue(np.allclose(dw, fd, atol=1e-4))
+
+    def test_fractional_wins_power_loses_exp(self):
+        import numpy as np
+        from trinition import benchmark_longmemory as lm
+        rng = np.random.default_rng(0)
+        T, ntr, nte, ep = 48, 1500, 1000, 200
+        # power-law regime: fractional (4 params) should beat the equal-budget
+        # small SSM (state=2, 7 params).
+        Xtr, ytr = lm.make_dataset(ntr, T, "power", rng)
+        Xte, yte = lm.make_dataset(nte, T, "power", rng)
+        mse_f, pf, q = lm.train_fractional(Xtr, ytr, Xte, yte, memory=T,
+                                           epochs=ep, lr=2e-2)
+        mse_s2, _ = lm.train_ssm(Xtr, ytr, Xte, yte, state_dim=2,
+                                 epochs=ep, lr=2e-2)
+        self.assertLess(mse_f, mse_s2)
+        # exponential regime: the SSM is exact territory and should beat
+        # the fractional power-law kernel.
+        Xtr, ytr = lm.make_dataset(ntr, T, "exp", rng)
+        Xte, yte = lm.make_dataset(nte, T, "exp", rng)
+        mse_f2, _, _ = lm.train_fractional(Xtr, ytr, Xte, yte, memory=T,
+                                           epochs=ep, lr=2e-2)
+        mse_s2e, _ = lm.train_ssm(Xtr, ytr, Xte, yte, state_dim=2,
+                                  epochs=ep, lr=2e-2)
+        self.assertLess(mse_s2e, mse_f2)
+
+
 if __name__ == "__main__":
     unittest.main()

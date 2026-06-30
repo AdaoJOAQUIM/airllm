@@ -64,6 +64,23 @@ python -m airllm.trinition.demo
 cd air_llm && python -m unittest tests.test_trinition
 ```
 
+## Falsification harness
+
+`benchmark.py` puts the hypothesis to an actual test: it compares composition
+algebras (real / quaternion / Trinition) at **equal readout-parameter budgets**
+on a rotation-composition control task and a fractional-memory task, and sweeps
+the Trinition deformation knob. It requires `numpy`.
+
+```bash
+cd air_llm/airllm && python -c "import trinition.benchmark as b; b.main(['--seed','0'])"
+```
+
+The recorded outcome (real numbers, including the parts that contradict the
+thesis) is in [`RESULTS.md`](RESULTS.md): the deformable Trinition product does
+**not** capture rotation structure (no alpha approaches the matched algebra),
+while the fractional operator shows a modest, genuine parameter-efficiency edge
+on long-memory data.
+
 ## Notes / further reading
 
 The naming follows discussions of Abdon Atangana's work on 3D hypercomplex

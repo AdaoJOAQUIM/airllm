@@ -135,5 +135,37 @@ class TestAtanganaMemory(unittest.TestCase):
             atangana_memory(seq, mix=2.0)
 
 
+class TestBenchmark(unittest.TestCase):
+    """Smoke + sanity checks for the falsification harness. These assert the
+    *controls* hold (e.g. the matched algebra solves its task), not a particular
+    outcome for Trinition."""
+
+    def setUp(self):
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy not installed")
+
+    def test_quaternion_solves_rotation_control(self):
+        import numpy as np
+        from trinition import benchmark as bm
+        rng = np.random.default_rng(0)
+        res = bm.run_task_a(rng, sizes=[400], length=5, n_test=500)
+        # The matched algebra must essentially solve exact quaternion composition;
+        # the real-diagonal baseline must not. This validates the harness.
+        self.assertLess(res["quaternion"][-1], 1e-6)
+        self.assertGreater(res["real"][-1], 1e-3)
+
+    def test_deformation_sweep_runs(self):
+        import numpy as np
+        from trinition import benchmark as bm
+        rng = np.random.default_rng(0)
+        sweep = bm.sweep_trinition_deformation(
+            rng, n_train=400, length=5, n_test=500, alphas=[0.0, 0.5, 1.0])
+        self.assertEqual(len(sweep), 3)
+        for alpha, mse in sweep:
+            self.assertGreaterEqual(mse, 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

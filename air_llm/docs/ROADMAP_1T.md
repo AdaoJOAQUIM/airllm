@@ -35,10 +35,13 @@ toward "1T-class" capability on such hardware.
    Measured: 16.00 → 11.27 bits/param (−29.6%) on trained-like bf16 weights,
    bit-for-bit exact, ~140 MB/s decompression on one CPU core — decode is faster
    than the disk read it saves. Matches the DFloat11/ZipNN numbers.
-2. **CPU/ARM-first streaming.** Tensor-granularity sharding (a single layer of a
-   large model can exceed 4 GB), mmap'd reads, prefetch of tensor N+1 during
-   compute of tensor N. This turns AirLLM into the layer-1 engine for
-   weak-hardware inference.
+2. **CPU/ARM-first streaming — PRIMITIVES DONE** (`airllm/streaming.py`).
+   `TensorStreamer` reads shard tensors one at a time (mmap-backed lazy
+   `safe_open`, lossless shards decoded transparently); `streamed_linear`
+   computes y = xW^T exactly in row blocks so peak weight memory is one block
+   regardless of the matrix size (proof: docs/THEORY.md, Theorem 3). Remaining:
+   wire these into the layer-by-layer forward pass, and prefetch of block N+1
+   during compute of block N.
 3. **Low-bit CPU decode paths.** 2-bit codebook formats (AQLM/QTIP-style) and
    native ternary (BitNet b1.58, 1.58 bits/param, CPU-friendly by construction —
    see [arXiv:2504.12285](https://arxiv.org/abs/2504.12285) and

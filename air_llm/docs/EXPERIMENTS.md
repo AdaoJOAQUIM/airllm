@@ -51,6 +51,39 @@ a model below capacity has slack and survives 4-bit much better, which is
 exactly why practical 4-bit quantization of undertrained large models
 works. The two regimes (full vs. slack) are the interesting frontier.
 
+## E2 — The SGD-channel discriminating experiment (2026-07-02)
+
+Tests the mechanism proposed in CAPACITY_THEORY.md §4: if stored
+knowledge is bounded by a Gaussian-channel capacity ½log₂(1+SNR), then
+injected gradient noise (std = σ × grad std, per tensor, per step) must
+collapse capacity along the log curve. Script:
+`examples/sgd_channel_test.py` (N = 6,000 facts, ~8 min CPU).
+
+| σ (rel. noise) | recall | bits stored | bits/param |
+|---:|---:|---:|---:|
+| 0.0 | 1.000 | 48,000 | **2.101** |
+| 1.0 | 0.975 | 46,824 | 2.049 |
+| 2.0 | 0.906 | 43,480 | 1.903 |
+| 4.0 | 0.808 | 38,768 | 1.697 |
+
+**Finding 1 (the constant crossed 2).** With zero injected noise the
+22,848-param MLP stores 48,000 bits at *perfect recall*:
+**κ ≥ 2.10 bits/param** — the same region as Allen-Zhu & Li's ~2
+bits/param for transformers, now observed on a second architecture from
+this repo's own bench. (E1's 1.58 was optimization-limited; the true
+plateau is ≥ 2.10 and still a lower bound.)
+
+**Finding 2 (naive channel refuted in magnitude, noise-sensitivity
+confirmed in direction).** Capacity does fall monotonically with noise —
+but far more slowly than the single-step channel formula predicts
+(σ = 4 gives per-step SNR ≈ 1/16, naive κ ≈ 0.09; measured 1.70). The
+deficit grows roughly linearly in σ (−0.05, −0.20, −0.40). Interpretation:
+training is not a single use of the channel — Adam's time-averaging over
+thousands of steps recovers most of the per-step SNR. The correct
+mechanism must be a rate–distortion analysis of the whole *trajectory*,
+not of one step. The naive model is dead; the refined question is alive
+and sharply posed.
+
 ### What would make this discovery-grade
 
 1. Precision: is the plateau exactly the same constant across

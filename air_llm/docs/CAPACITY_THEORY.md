@@ -122,7 +122,43 @@ programs beats knowledge as weights", and the bench can test it: measure
 LCDL for algorithmic task families with and without an interpreter in the
 loop.*
 
-## 4. Why this could be "mathematics worthy of 2050"
+## 4. Toward the hard theorem: the SGD channel
+
+The power move is to *derive* Conjecture A's constant instead of
+measuring it. Candidate mechanism:
+
+**Model.** Treat training as a communication channel: the data transmits
+into the weights through a noisy medium (stochastic gradients). At
+stationarity, weight w = w* + n with SGD noise n. Then the extractable
+information per weight is bounded by the Gaussian channel capacity
+(Shannon 1948):
+
+    κ ≤ ½ log₂(1 + SNR),   SNR = Var(signal) / Var(SGD noise).
+
+**Immediate consequences.** (i) κ ≈ 2 bits/param corresponds to
+SNR ≈ 2⁴ − 1 = 15 — a *prediction about the training process*, not the
+architecture, which would explain the architecture-independence in
+Conjecture A. (ii) The constant should NOT be universal against the
+*optimizer*: multiplying gradient-noise variance by 16 should drive
+SNR toward 1 and κ toward ½ bit/param, along the ½log₂(1+SNR) curve.
+
+**The discriminating experiment.** Inject controlled gradient noise and
+re-measure capacity (`examples/sgd_channel_test.py`):
+- capacity follows the log-curve → the channel mechanism holds, and the
+  hard theorem to prove is a rate–distortion analysis of SGD
+  (relatives: information-in-weights, Achille & Soatto 2018; information
+  bottleneck, Tishby);
+- capacity resists noise → the mechanism is wrong, storage is
+  attractor-like (discrete basins), and the right machinery is
+  **singular learning theory** (Watanabe 2009) — where the effective
+  parameter count is the real log canonical threshold of the loss
+  landscape, computed via Hironaka's resolution of singularities. That
+  is what genuinely heavy mathematics looks like in this territory, and
+  it is already on the table.
+
+Either branch upgrades this document from definitions to mechanism.
+
+## 5. Why this could be "mathematics worthy of 2050"
 
 Not because the definitions are hard — because they make previously
 incommensurable things comparable on one axis (bits): quantization

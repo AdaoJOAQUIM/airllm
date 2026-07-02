@@ -41,7 +41,8 @@ knowledge — consistent with the practical quantization frontier sitting at
 QTIP, [DBF](https://arxiv.org/abs/2505.11076)). Facts are better stored
 *outside* weights: text holds ~8 bits/byte, parameters ~1 bit/byte (fp16).
 
-**Brick:** external fact store (retrieval), later step.
+**Brick:** `airllm/factstore.py` (compressed passages + BM25 retrieval,
+verbatim/lossless recall, pure stdlib). **Status: done.**
 
 ---
 
@@ -156,6 +157,7 @@ later step.
    measured by: bits/param bench (Theorem 1) + capability bench (Theorem 4)
 ```
 
-Execution order: 1. lossless codec (done) → 2. tensor streaming (this
-commit) → 3. low-bit CPU decode (BitNet/AQLM-style) → 4. fact store +
-program library. See ROADMAP_1T.md for sources per step.
+Execution order: 1. lossless codec (done) → 2. tensor streaming + CPU
+pipeline (done, verified E2E) → 3. low-bit CPU decode (4/8-bit done;
+2-bit/ternary remaining) → 4. fact store (done) + program library
+(open research). See ROADMAP_1T.md for sources per step.

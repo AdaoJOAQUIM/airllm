@@ -26,5 +26,10 @@ else:
 from .lossless import (compress_tensor_lossless, decompress_tensor_lossless,
                        compress_state_dict_lossless, decompress_state_dict_lossless,
                        is_lossless_compressed, compression_report)
-from .streaming import TensorStreamer, streamed_linear, StreamedLinear
+from .streaming import (TensorStreamer, streamed_linear, StreamedLinear,
+                        stream_module_from_shard)
+from .quant_cpu import (quantize_tensor_cpu, dequantize_tensor_cpu,
+                        compress_state_dict_cpu_quant, decompress_state_dict_cpu_quant,
+                        is_cpu_quantized)
+from .factstore import FactStore
 

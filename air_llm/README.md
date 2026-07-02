@@ -151,6 +151,24 @@ layer. Measure the effective bits/parameter on any model with
 `examples/lossless_bench.py`. See `docs/ROADMAP_1T.md` for where this fits in the
 larger plan.
 
+#### CPU-only quantization (no bitsandbytes needed)
+
+On machines without CUDA (Raspberry Pi, ARM, plain CPU servers) the regular
+'4bit'/'8bit' modes are unavailable because they need bitsandbytes. Use
+`compression='4bit-cpu'` or `compression='8bit-cpu'` instead: blockwise absmax
+quantization (NF4 codebook for 4-bit, int8 for 8-bit) implemented in pure
+PyTorch. Combined with `device='cpu'` this runs the whole pipeline offline on
+weak hardware:
+
+```python
+model = AutoModel.from_pretrained("Qwen/Qwen2.5-0.5B",
+                     device='cpu',
+                     compression='4bit-cpu'
+                    )
+```
+
+Verify any model end-to-end on CPU with `examples/cpu_e2e_check.py`.
+
 ## Configurations
  
 When initialize the model, we support the following configurations:

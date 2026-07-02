@@ -44,15 +44,20 @@ toward "1T-class" capability on such hardware.
    `StreamedLinear` nn.Module drop-in whose weights never leave the disk.
    Remaining: wire StreamedLinear into the layer-by-layer forward pass of
    airllm_base.
-3. **Low-bit CPU decode paths.** 2-bit codebook formats (AQLM/QTIP-style) and
-   native ternary (BitNet b1.58, 1.58 bits/param, CPU-friendly by construction —
+3. **Low-bit CPU decode paths — 4/8-BIT DONE** (`airllm/quant_cpu.py`,
+   `compression='4bit-cpu' / '8bit-cpu'`): blockwise absmax int8 and NF4
+   quantization, pure CPU, no bitsandbytes/CUDA, verified end-to-end on a real
+   model. Remaining: 2-bit codebook formats (AQLM/QTIP-style) and native
+   ternary (BitNet b1.58, 1.58 bits/param, CPU-friendly by construction —
    see [arXiv:2504.12285](https://arxiv.org/abs/2504.12285) and
    [bitnet.cpp](https://github.com/microsoft/BitNet)). A ~60B ternary model is
    the largest knowledge store that physically fits in 12 GB under the
    2-bits/param capacity law.
-4. **Externalize knowledge.** Weights should hold the *reasoner*, not the facts:
-   local retrieval over a compressed corpus (lossless, verbatim) + a small
-   model. Long-term direction: knowledge as programs
+4. **Externalize knowledge — FACT STORE DONE** (`airllm/factstore.py`):
+   zlib-compressed passages + local BM25 retrieval, pure standard library,
+   offline; `density_report()` quantifies the ~10-30x storage advantage of
+   facts-on-disk over facts-in-weights. Weights should hold the *reasoner*,
+   not the facts. Remaining, long-term: knowledge as programs
    ([DreamCoder, arXiv:2006.08381](https://arxiv.org/abs/2006.08381);
    [CompressARC, arXiv:2512.06104](https://arxiv.org/abs/2512.06104)).
 

@@ -23,6 +23,8 @@ import torch.nn as nn
 from safetensors.torch import load_file, save_file
 
 from .persist import ModelPersister
+from .lossless import (compress_state_dict_lossless, decompress_state_dict_lossless,
+                       is_lossless_compressed)
 
 
 try:
@@ -83,6 +85,9 @@ def clean_memory():
 
 
 def uncompress_layer_state_dict(layer_state_dict):
+    if is_lossless_compressed(layer_state_dict):
+        return decompress_state_dict_lossless(layer_state_dict)
+
     uncompressed_layer_state_dict = None
     if any(['4bit' in k for k in layer_state_dict.keys()]):
         uncompressed_layer_state_dict = {}
@@ -145,6 +150,10 @@ def check_space(checkpoint_path, layer_shards_saving_path=None, compression=None
         total_shard_files_size_bytes = int(total_shard_files_size_bytes / 0.2813)
     elif compression == '8bit':
         total_shard_files_size_bytes = total_shard_files_size_bytes // 2
+    elif compression == 'lossless':
+        # byte-plane entropy coding typically saves ~25-30% on bf16/fp16
+        # weights; be conservative for the space check
+        total_shard_files_size_bytes = int(total_shard_files_size_bytes * 0.8)
 
     total, used, free = shutil.disk_usage(checkpoint_path if layer_shards_saving_path is None else layer_shards_saving_path)
 
@@ -172,6 +181,8 @@ def compress_layer_state_dict(layer_state_dict, compression=None):
             compressed_layer_state_dict[k] = v_quant
             compressed_layer_state_dict[k + ".8bit.absmax"] = absmax
             compressed_layer_state_dict[k + ".8bit.code"] = code
+    elif compression == 'lossless':
+        compressed_layer_state_dict = compress_state_dict_lossless(layer_state_dict)
 
     return compressed_layer_state_dict if compressed_layer_state_dict is not None else layer_state_dict
 
@@ -192,7 +203,8 @@ def split_and_save_layers(checkpoint_path, layer_shards_saving_path=None, splitt
     """
 
     if compression is not None:
-        assert bitsandbytes_installed, f"when using compression bitsandbytes has to be installed."
+        if compression in ('4bit', '8bit'):
+            assert bitsandbytes_installed, f"when using 4bit/8bit compression bitsandbytes has to be installed."
         splitted_model_dir_name = splitted_model_dir_name + "." + compression
 
     checkpoint_path = Path(checkpoint_path)

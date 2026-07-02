@@ -21,4 +21,9 @@ else:
     from .auto_model import AutoModel
     from .utils import split_and_save_layers
     from .utils import NotEnoughSpaceException
+    from .utils import compress_layer_state_dict, uncompress_layer_state_dict
+
+from .lossless import (compress_tensor_lossless, decompress_tensor_lossless,
+                       compress_state_dict_lossless, decompress_state_dict_lossless,
+                       is_lossless_compressed, compression_report)
 

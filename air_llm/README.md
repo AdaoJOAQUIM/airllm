@@ -131,6 +131,26 @@ Quantization normally needs to quantize both weights and activations to really s
 
 While in our case the bottleneck is mainly at the disk loading, we only need to make the model loading size smaller. So, we get to only quantize the weights' part, which is easier to ensure the accuracy.
 
+#### Lossless compression (bit-for-bit exact, no GPU needed)
+
+`compression='lossless'` shrinks the layer shards ~25-30% with **zero** accuracy
+impact: outputs are bit-for-bit identical to the uncompressed model. It uses
+byte-plane splitting plus entropy coding (the same principle as
+[DFloat11](https://arxiv.org/abs/2504.11651) and ZipNN: the sign+exponent byte of
+trained bf16/fp16 weights carries only ~2-3 bits of entropy), is implemented in
+pure CPU code from the standard library, and needs neither bitsandbytes nor CUDA:
+
+```python
+model = AutoModel.from_pretrained("garage-bAInd/Platypus2-70B-instruct",
+                     compression='lossless'
+                    )
+```
+
+Since disk loading is AirLLM's bottleneck, smaller shards also mean less I/O per
+layer. Measure the effective bits/parameter on any model with
+`examples/lossless_bench.py`. See `docs/ROADMAP_1T.md` for where this fits in the
+larger plan.
+
 ## Configurations
  
 When initialize the model, we support the following configurations:

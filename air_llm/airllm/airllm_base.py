@@ -15,7 +15,14 @@ from transformers.quantizers import AutoHfQuantizer, HfQuantizer
 
 from .profiler import LayeredProfiler
 
-from optimum.bettertransformer import BetterTransformer
+try:
+    # removed in optimum >= 2.0: transformers ships native sdpa attention now,
+    # init_model() falls back to attn_implementation="sdpa" below
+    from optimum.bettertransformer import BetterTransformer
+
+    bettertransformer_available = True
+except ImportError:
+    bettertransformer_available = False
 
 from .utils import clean_memory, load_layer, \
     find_or_create_local_splitted_path
@@ -78,6 +85,8 @@ class AirLLMBaseModel(GenerationMixin):
             if to profile the model loading time, default to False
         compression: str, optinal
             setting to '4bit' or '8bit' to enable compression from 16 bits to 4 bits/8 bits which speeed up 4x or 2x inference time with a tiny accuracy loss.
+            setting to 'lossless' enables bit-for-bit exact byte-plane entropy coding
+            (~25-30% smaller shards, pure CPU, no bitsandbytes/CUDA needed).
         hf_token: str, optional
             huggingface api token could be provided, by default None
         """
@@ -92,9 +101,9 @@ class AirLLMBaseModel(GenerationMixin):
         self._supports_cache_class = False
         self.hf_quantizer = None
 
-        if compression is not None:
+        if compression in ('4bit', '8bit'):
             if not bitsandbytes_installed:
-                raise ImportError('WARNING: bitsandbytes not found. Compression needs bitsandbytes. To use compression, please install bitsandbytes: `pip install bitsandbytes`')
+                raise ImportError('WARNING: bitsandbytes not found. 4bit/8bit compression needs bitsandbytes. To use it, please install bitsandbytes: `pip install bitsandbytes`. Alternatively use compression=\'lossless\' which has no extra dependency.')
 
 
         self.compression = compression
@@ -185,14 +194,15 @@ class AirLLMBaseModel(GenerationMixin):
         self.model = None
 
         if self.get_use_better_transformer():
-            try:
-                with init_empty_weights():
-                    self.model = AutoModelForCausalLM.from_config(self.config, trust_remote_code=True)
-                    self.model = BetterTransformer.transform(self.model)  # enable flash attention
-            except ValueError as ve:
-                del self.model
-                clean_memory()
-                self.model = None
+            if bettertransformer_available:
+                try:
+                    with init_empty_weights():
+                        self.model = AutoModelForCausalLM.from_config(self.config, trust_remote_code=True)
+                        self.model = BetterTransformer.transform(self.model)  # enable flash attention
+                except ValueError as ve:
+                    del self.model
+                    clean_memory()
+                    self.model = None
 
             if self.model is None:
                 # try way 2.

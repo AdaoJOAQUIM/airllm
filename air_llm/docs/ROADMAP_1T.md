@@ -57,7 +57,12 @@ toward "1T-class" capability on such hardware.
    zlib-compressed passages + local BM25 retrieval, pure standard library,
    offline; `density_report()` quantifies the ~10-30x storage advantage of
    facts-on-disk over facts-in-weights. Weights should hold the *reasoner*,
-   not the facts. Remaining, long-term: knowledge as programs
+   not the facts. First program-induction brick done too
+   (`airllm/induction.py`): computable approximations of Solomonoff
+   induction — CTW exact Bayesian mixture (Willems 1995), Levin-ordered MDL
+   program search over a bounded DSL, compression-based similarity and
+   prediction (docs/THEORY.md, Theorem 7). Remaining, long-term: a growing,
+   self-refactoring program library
    ([DreamCoder, arXiv:2006.08381](https://arxiv.org/abs/2006.08381);
    [CompressARC, arXiv:2512.06104](https://arxiv.org/abs/2512.06104)).
 

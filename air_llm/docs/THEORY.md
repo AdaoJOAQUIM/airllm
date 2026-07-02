@@ -137,6 +137,48 @@ later step.
 
 ---
 
+## Theorem 7 (Computable approximations of Solomonoff induction)
+
+Solomonoff's universal inductor is uncomputable (it requires solving the
+halting problem — Turing 1936). But three published bricks make bounded
+versions of it computable, each trading universality for tractability in a
+provable way:
+
+**7a. Levin universal search (1973).** Running all programs p in parallel,
+each with time budget proportional to 2^−l(p), finds a solution checkable
+in time t using total time O(2^l(p*) · t) — optimal up to a constant
+factor among all search orders. *Proof sketch:* the schedule spends half
+its time on 1-bit programs, a quarter on 2-bit ones, etc.; the target
+program p* receives a constant fraction 2^−l(p*) of all compute. ∎
+Computable because every program is time-bounded — the halting problem is
+never consulted, only outrun.
+
+**7b. Context Tree Weighting (Willems, Shtarkov & Tjalkens 1995).** The
+Bayesian mixture over *all* binary tree sources of depth ≤ D is exactly
+computable in O(D) per symbol, with code length within
+Γ(model) + O(log n) bits of the best tree source in hindsight — a
+computable miniature of Solomonoff's mixture over all programs, restricted
+to a (huge but bounded) model class. *Proof:* the recursive weighting
+P_w = ½P_e + ½P_w(child0)·P_w(child1) telescopes the sum over all 2^(2^D)
+tree structures into D+1 local updates. ∎
+
+**7c. Compression ≈ Kolmogorov (Cilibrasi & Vitányi 2005).** The
+Normalized Compression Distance computed with any real compressor
+approximates the (uncomputable) normalized information distance, with
+quality degrading gracefully with the compressor's distance from optimal.
+
+**Assembled precedent:** MC-AIXI-CTW (Veness et al. 2011,
+arXiv:0909.0801) — 7b as the world model inside a Monte-Carlo planner —
+is a *running* approximation of AIXI that learns games from raw
+experience. The puzzle has been mounted once before; the bricks are sound.
+
+**Brick:** `airllm/induction.py` — CTW predictor (7b), MDL program search
+over a bounded DSL (7a, with the universal language traded for a total
+one), NCD (7c), and prediction-by-compression (Theorem 4 run backwards).
+**Status: done.**
+
+---
+
 ## Concept architecture
 
 ```

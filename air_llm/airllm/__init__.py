@@ -32,4 +32,6 @@ from .quant_cpu import (quantize_tensor_cpu, dequantize_tensor_cpu,
                         compress_state_dict_cpu_quant, decompress_state_dict_cpu_quant,
                         is_cpu_quantized)
 from .factstore import FactStore
+from .induction import (CTWPredictor, mdl_program_search, ncd,
+                        predict_by_compression)
 

@@ -213,7 +213,7 @@ class AirLLMBaseModel(GenerationMixin):
 
                     with init_empty_weights():
                         self.model = AutoModelForCausalLM.from_config(self.config, attn_implementation="sdpa", trust_remote_code=True)
-                    print(f"attn imp: {type(self.model.model.layers[3].self_attn)}")
+                    print(f"attn imp: {type(self.model.model.layers[0].self_attn)}")
 
                 except TypeError as ve:
                     del self.model
@@ -379,12 +379,24 @@ class AirLLMBaseModel(GenerationMixin):
         return self.forward(*args, **kwargs)
 
     def get_past_key_values_cache_seq_len(self, past_key_values):
+        if cache_utils_installed and isinstance(past_key_values, Cache):
+            return past_key_values.get_seq_length()
         return past_key_values[0][0].shape[2]
     def get_sequence_len(self, seq):
         return seq.shape[1]
 
     def get_pos_emb_args(self, len_p, len_s):
         return {}
+
+    def _maybe_position_embeddings(self, seq, full_position_ids, len_p, len_s):
+        # transformers >= 4.43 computes rotary (cos, sin) once at model level
+        # and passes it to every decoder layer; when we drive layers manually
+        # we must do the same. No-op for models without model-level rotary.
+        rotary = getattr(getattr(self.model, 'model', None), 'rotary_emb', None)
+        if rotary is None:
+            return {}
+        pos_ids = full_position_ids[:, len_p:len_p + len_s]
+        return {'position_embeddings': rotary(seq, pos_ids)}
 
     def get_past_key_value_args(self, k_cache, v_cache):
         return {'past_key_value': (k_cache, v_cache)}
@@ -420,6 +432,11 @@ class AirLLMBaseModel(GenerationMixin):
         if cache_utils_installed:
             # we don't support kv cache for new version yet
             use_cache = False
+            if isinstance(past_key_values, Cache):
+                # new-style Cache objects are not supported by the layerwise
+                # loop below; recompute from the full sequence instead (the
+                # legacy tuple format is still handled)
+                past_key_values = None
 
         if self.profiling_mode:
             self.profiler.clear_profiling_time()
@@ -540,12 +557,15 @@ class AirLLMBaseModel(GenerationMixin):
                             pos_embed_args = self.get_pos_emb_args(len_p, len_s)
                             kwargs = {**kwargs, **past_key_value_args, **pos_embed_args, **attention_mask_args,
                                       **position_ids_args}
+                            kwargs.update(self._maybe_position_embeddings(seq, position_ids, len_p, len_s))
 
 
                             layer_outputs = layer(seq,
                                                   **kwargs
                                                   )
-                            new_seq = layer_outputs[0]
+                            # transformers >= 4.54 returns the hidden states
+                            # tensor directly instead of a tuple
+                            new_seq = layer_outputs[0] if isinstance(layer_outputs, tuple) else layer_outputs
 
                             if output_attentions:
                                 all_self_attns[i].append(layer_outputs[1])
@@ -574,15 +594,17 @@ class AirLLMBaseModel(GenerationMixin):
                                           'attention_mask': attention_mask[:, :, -len_seq:, -len_seq:],
                                           }
                                 kwargs = {**kwargs, **pos_embed_args, **attention_mask_args, **position_ids_args}
+                                kwargs.update(self._maybe_position_embeddings(seq, position_ids, 0, len_seq))
 
-
-                                new_seq = layer(seq, **kwargs)[0]
+                                layer_out = layer(seq, **kwargs)
+                                new_seq = layer_out[0] if isinstance(layer_out, tuple) else layer_out
                             else:
 
                                 kwargs = {'use_cache': True,
                                           'attention_mask': attention_mask[:, :, -len_seq:, -len_seq:],
                                           }
                                 kwargs = {**kwargs, **pos_embed_args, **attention_mask_args, **position_ids_args}
+                                kwargs.update(self._maybe_position_embeddings(seq, position_ids, 0, len_seq))
 
                                 layer_out = layer(seq, **kwargs)
 

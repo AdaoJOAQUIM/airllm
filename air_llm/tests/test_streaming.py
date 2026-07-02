@@ -8,7 +8,8 @@ from safetensors.torch import save_file
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from airllm.streaming import TensorStreamer, streamed_linear, StreamedLinear
+from airllm.streaming import (TensorStreamer, streamed_linear, StreamedLinear,
+                              stream_module_from_shard)
 from airllm.utils import compress_layer_state_dict
 
 
@@ -116,6 +117,36 @@ class TestStreaming(unittest.TestCase):
             # exact w.r.t. the same kernel (see test_streamed_linear_exact),
             # and within float rounding w.r.t. a different one
             self.assertTrue(torch.allclose(streamed(x), dense(x), rtol=1e-6, atol=1e-6))
+
+    def test_streamed_llama_decoder_layer_bit_identical(self):
+        # a real transformers Llama decoder layer with all its linears
+        # streamed from disk must match the dense layer bit-for-bit
+        from transformers.models.llama.configuration_llama import LlamaConfig
+        from transformers.models.llama.modeling_llama import (LlamaDecoderLayer,
+                                                              LlamaRotaryEmbedding)
+
+        torch.manual_seed(2)
+        cfg = LlamaConfig(hidden_size=64, intermediate_size=128, num_attention_heads=4,
+                          num_key_value_heads=2, num_hidden_layers=2, vocab_size=256)
+        dense = LlamaDecoderLayer(cfg, layer_idx=0).eval()
+
+        prefix = 'model.layers.0.'
+        sd = {prefix + k: v.detach().contiguous() for k, v in dense.state_dict().items()}
+        path = os.path.join(self.tmp.name, 'llama_layer.safetensors')
+        save_file(sd, path)
+
+        streamed = LlamaDecoderLayer(cfg, layer_idx=0).eval()
+        replaced = stream_module_from_shard(streamed, path, prefix=prefix, block_rows=16)
+        self.assertEqual(replaced, 7)  # q, k, v, o, gate, up, down
+
+        x = torch.normal(0, 1, (1, 6, 64))
+        pos_emb = LlamaRotaryEmbedding(config=cfg)(x, torch.arange(6).unsqueeze(0))
+        with torch.no_grad():
+            out_dense = dense(x, position_embeddings=pos_emb)
+            out_streamed = streamed(x, position_embeddings=pos_emb)
+        od = out_dense[0] if isinstance(out_dense, tuple) else out_dense
+        ost = out_streamed[0] if isinstance(out_streamed, tuple) else out_streamed
+        self.assertTrue(torch.equal(od, ost))
 
     def test_load_into_module(self):
         module = torch.nn.Linear(64, 300)

@@ -183,3 +183,46 @@ class StreamedLinear(torch.nn.Module):
         return (f"in_features={self.in_features}, out_features={self.out_features}, "
                 f"bias={self.bias is not None}, block_rows={self.block_rows}, "
                 f"prefetch={self.prefetch}, weight_key='{self.weight_key}'")
+
+
+def stream_module_from_shard(module, streamer, prefix='', block_rows=1024, prefetch=True):
+    """
+    Prepare a module to run with its big weights left on disk:
+
+    - every nn.Linear whose weight exists in the shard is replaced by a
+      StreamedLinear bound to that shard key;
+    - every other parameter/buffer present in the shard (norms, embeddings,
+      biases) is copied in one tensor at a time.
+
+    `prefix` is the shard-key prefix for this module (e.g.
+    'model.layers.0.'). Returns the number of linears replaced. Peak extra
+    memory: one non-linear tensor, never a full linear weight.
+    """
+    if isinstance(streamer, (str, Path)):
+        streamer = TensorStreamer(streamer)
+
+    shard_keys = set(streamer.keys())
+    replaced = 0
+
+    for name, child in list(module.named_modules()):
+        for child_name, sub in list(child.named_children()):
+            full_name = f"{name}.{child_name}" if name else child_name
+            weight_key = f"{prefix}{full_name}.weight"
+            if isinstance(sub, torch.nn.Linear) and weight_key in shard_keys:
+                bias_key = f"{prefix}{full_name}.bias"
+                setattr(child, child_name, StreamedLinear(
+                    streamer, weight_key,
+                    bias_key=bias_key if bias_key in shard_keys else None,
+                    block_rows=block_rows, prefetch=prefetch))
+                replaced += 1
+
+    # load whatever the shard has for the remaining (small) tensors
+    remaining = dict(module.named_parameters())
+    remaining.update(dict(module.named_buffers()))
+    for param_name, param in remaining.items():
+        key = f"{prefix}{param_name}"
+        if key in shard_keys:
+            with torch.no_grad():
+                param.copy_(streamer.get(key))
+
+    return replaced

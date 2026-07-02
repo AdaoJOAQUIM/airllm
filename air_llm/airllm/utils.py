@@ -220,11 +220,30 @@ def split_and_save_layers(checkpoint_path, layer_shards_saving_path=None, splitt
     if os.path.exists(checkpoint_path / 'pytorch_model.bin.index.json'):
         with open(checkpoint_path / 'pytorch_model.bin.index.json', 'rb') as f:
             index = json.load(f)['weight_map']
-    else:
+    elif os.path.exists(checkpoint_path / 'model.safetensors.index.json'):
         safetensors_format = True
-        assert os.path.exists(checkpoint_path / 'model.safetensors.index.json'), f'model.safetensors.index.json should exist.'
         with open(checkpoint_path / 'model.safetensors.index.json', 'rb') as f:
             index = json.load(f)['weight_map']
+    else:
+        # single-file checkpoint without an index: synthesize the weight map
+        single_file = checkpoint_path / 'model.safetensors'
+        if not os.path.exists(single_file) and repo_id is not None:
+            try:
+                huggingface_hub.snapshot_download(repo_id, allow_patterns='model.safetensors',
+                                                  token=hf_token)
+            except Exception:
+                pass
+        if os.path.exists(single_file):
+            safetensors_format = True
+            from safetensors import safe_open
+            with safe_open(single_file, framework='pt', device='cpu') as f:
+                index = {k: 'model.safetensors' for k in f.keys()}
+        else:
+            assert os.path.exists(checkpoint_path / 'pytorch_model.bin'), \
+                'model.safetensors.index.json, model.safetensors or pytorch_model.bin should exist.'
+            single_state_dict = torch.load(checkpoint_path / 'pytorch_model.bin', map_location='cpu')
+            index = {k: 'pytorch_model.bin' for k in single_state_dict.keys()}
+            del single_state_dict
 
     if layer_names is None:
         n_layers = len(set([int(k.split('.')[2]) for k in index.keys() if 'model.layers' in k]))

@@ -16,6 +16,7 @@ Two primitives:
   full matrix (proof of exactness in docs/THEORY.md, Theorem 3).
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import torch
@@ -95,14 +96,42 @@ class TensorStreamer:
         return loaded
 
 
-def streamed_linear(x, streamer, weight_key, bias=None, block_rows=1024):
+def _iter_weight_blocks(w_slice, out_features, block_rows, prefetch):
+    """
+    Yield (start, end, block) row blocks of a weight slice. With
+    prefetch=True, block i+1 is read from disk on a worker thread while
+    block i is being consumed (Theorem 5 in docs/THEORY.md: I/O is hidden
+    behind compute when compute is the slower stage).
+    """
+    starts = list(range(0, out_features, block_rows))
+
+    if not prefetch or len(starts) <= 1:
+        for start in starts:
+            end = min(start + block_rows, out_features)
+            yield start, end, w_slice[start:end]
+        return
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        def read(start):
+            return w_slice[start: min(start + block_rows, out_features)]
+
+        future = executor.submit(read, starts[0])
+        for i, start in enumerate(starts):
+            block = future.result()
+            if i + 1 < len(starts):
+                future = executor.submit(read, starts[i + 1])
+            yield start, min(start + block_rows, out_features), block
+
+
+def streamed_linear(x, streamer, weight_key, bias=None, block_rows=1024, prefetch=True):
     """
     Exact y = x @ W^T + bias, streaming W from disk in row blocks.
 
-    Peak weight memory is one block (block_rows x in_features) regardless
-    of W's size, so out_features can exceed available RAM. Exactness:
-    output columns j in [i*k, (i+1)*k) depend only on rows i*k..(i+1)*k of
-    W; each is computed once, no arithmetic is reordered.
+    Peak weight memory is one block (two with prefetch) of
+    block_rows x in_features, regardless of W's size, so out_features can
+    exceed available RAM. Exactness: output columns j in [i*k, (i+1)*k)
+    depend only on rows i*k..(i+1)*k of W; each is computed once, no
+    arithmetic is reordered.
     """
     if isinstance(streamer, (str, Path)):
         streamer = TensorStreamer(streamer)
@@ -115,12 +144,42 @@ def streamed_linear(x, streamer, weight_key, bias=None, block_rows=1024):
     out_shape = list(x.shape[:-1]) + [out_features]
     y = torch.empty(out_shape, dtype=x.dtype)
 
-    for start in range(0, out_features, block_rows):
-        end = min(start + block_rows, out_features)
-        w_block = w_slice[start:end]
+    for start, end, w_block in _iter_weight_blocks(w_slice, out_features, block_rows, prefetch):
         y[..., start:end] = x @ w_block.to(x.dtype).t()
         del w_block
 
     if bias is not None:
         y += bias.to(y.dtype)
     return y
+
+
+class StreamedLinear(torch.nn.Module):
+    """
+    Drop-in replacement for torch.nn.Linear whose weight lives on disk and
+    is streamed in row blocks at forward time. Only the (tiny) bias is kept
+    resident. This is the building block for running layers that are larger
+    than RAM inside a normal nn.Module graph.
+    """
+
+    def __init__(self, streamer, weight_key, bias_key=None, block_rows=1024, prefetch=True):
+        super().__init__()
+        if isinstance(streamer, (str, Path)):
+            streamer = TensorStreamer(streamer)
+        self.streamer = streamer
+        self.weight_key = weight_key
+        self.block_rows = block_rows
+        self.prefetch = prefetch
+        self.out_features, self.in_features = streamer.shape(weight_key)
+        if bias_key is not None:
+            self.register_buffer('bias', streamer.get(bias_key))
+        else:
+            self.bias = None
+
+    def forward(self, x):
+        return streamed_linear(x, self.streamer, self.weight_key, bias=self.bias,
+                               block_rows=self.block_rows, prefetch=self.prefetch)
+
+    def extra_repr(self):
+        return (f"in_features={self.in_features}, out_features={self.out_features}, "
+                f"bias={self.bias is not None}, block_rows={self.block_rows}, "
+                f"prefetch={self.prefetch}, weight_key='{self.weight_key}'")

@@ -72,6 +72,30 @@ one *block of one tensor*, not one layer.
 
 ---
 
+## Theorem 5 (Pipelining bound) — two-stage pipeline
+
+**Statement.** Computing n blocks where each block needs d seconds of I/O
+and c seconds of compute takes n·(c+d) sequentially, but only
+d + n·max(c, d) with one prefetch thread (load block i+1 while computing
+block i). I/O is fully hidden when c ≥ d; the speedup approaches 2× when
+c = d.
+
+**Proof.** Induction on i: when compute of block i starts, its data is
+already resident (loaded during compute of block i−1, which took
+max(c,d) ≥ d). The critical path is the slower stage plus the initial
+fill. ∎ (Classical result; same wheel as AirLLM's existing layer-level
+prefetch and llama.cpp's overlapped reads.)
+
+**Corollary.** Combined with Theorem 3's corollary, a disk-bound
+deployment (c < d) loses *nothing* to compute: generation speed equals the
+disk-bandwidth bound itself. Every byte saved by the Theorem 1 codec
+converts 1:1 into throughput.
+
+**Brick:** `streaming.py` (`prefetch=True` in `streamed_linear`,
+`StreamedLinear` module). **Status: this commit.**
+
+---
+
 ## Theorem 4 (Prediction = compression) — Delétang et al.
 
 **Statement.** A predictive model plus arithmetic coding is a lossless

@@ -25,6 +25,8 @@ from safetensors.torch import load_file, save_file
 from .persist import ModelPersister
 from .lossless import (compress_state_dict_lossless, decompress_state_dict_lossless,
                        is_lossless_compressed)
+from .quant_cpu import (compress_state_dict_cpu_quant, decompress_state_dict_cpu_quant,
+                        is_cpu_quantized)
 
 
 try:
@@ -87,6 +89,8 @@ def clean_memory():
 def uncompress_layer_state_dict(layer_state_dict):
     if is_lossless_compressed(layer_state_dict):
         return decompress_state_dict_lossless(layer_state_dict)
+    if is_cpu_quantized(layer_state_dict):
+        return decompress_state_dict_cpu_quant(layer_state_dict)
 
     uncompressed_layer_state_dict = None
     if any(['4bit' in k for k in layer_state_dict.keys()]):
@@ -154,6 +158,10 @@ def check_space(checkpoint_path, layer_shards_saving_path=None, compression=None
         # byte-plane entropy coding typically saves ~25-30% on bf16/fp16
         # weights; be conservative for the space check
         total_shard_files_size_bytes = int(total_shard_files_size_bytes * 0.8)
+    elif compression == '4bit-cpu':
+        total_shard_files_size_bytes = int(total_shard_files_size_bytes / 0.2813)
+    elif compression == '8bit-cpu':
+        total_shard_files_size_bytes = total_shard_files_size_bytes // 2
 
     total, used, free = shutil.disk_usage(checkpoint_path if layer_shards_saving_path is None else layer_shards_saving_path)
 
@@ -183,6 +191,8 @@ def compress_layer_state_dict(layer_state_dict, compression=None):
             compressed_layer_state_dict[k + ".8bit.code"] = code
     elif compression == 'lossless':
         compressed_layer_state_dict = compress_state_dict_lossless(layer_state_dict)
+    elif compression in ('4bit-cpu', '8bit-cpu'):
+        compressed_layer_state_dict = compress_state_dict_cpu_quant(layer_state_dict, compression)
 
     return compressed_layer_state_dict if compressed_layer_state_dict is not None else layer_state_dict
 

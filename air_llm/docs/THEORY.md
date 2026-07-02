@@ -96,6 +96,27 @@ converts 1:1 into throughput.
 
 ---
 
+## Theorem 6 (Blockwise quantization error bound)
+
+**Statement.** Quantizing a block of B weights by q(w) = a·c(w/a), where
+a = max|w| over the block and c(·) maps to the nearest of K codebook
+values, has elementwise error |w − q(w)| ≤ a·δ, where δ is half the
+largest gap between adjacent codebook values on [−1, 1].
+
+**Proof.** w/a ∈ [−1, 1]; the nearest codebook value is at distance at
+most δ; multiplying by a scales the error. ∎ Small blocks keep `a` local,
+which is why blockwise beats per-tensor scaling
+([Dettmers & Zettlemoyer, arXiv:2212.09720](https://arxiv.org/abs/2212.09720));
+the NF4 codebook places the K = 16 values at standard-normal quantiles,
+information-theoretically optimal for Gaussian-like trained weights
+([QLoRA, arXiv:2305.14314](https://arxiv.org/abs/2305.14314)).
+
+**Brick:** `airllm/quant_cpu.py` (`compression='4bit-cpu' / '8bit-cpu'`),
+pure CPU — the existing '4bit'/'8bit' modes require bitsandbytes+CUDA.
+**Status: done.**
+
+---
+
 ## Theorem 4 (Prediction = compression) — Delétang et al.
 
 **Statement.** A predictive model plus arithmetic coding is a lossless

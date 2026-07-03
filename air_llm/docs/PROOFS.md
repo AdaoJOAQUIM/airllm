@@ -21,7 +21,7 @@ threshold units f_w(x) = sign(w·x), n real parameters. A *dichotomy* is
 an assignment of ±1 labels to the m points; it is *realizable* if some w
 produces it. Let C(m, n) be the number of realizable dichotomies.
 
-**Lemma K′.1 (Cover's recurrence).** C(m+1, n) = C(m, n) + C(m, n−1).
+**Theorem K′.1 (Cover's recurrence).** C(m+1, n) = C(m, n) + C(m, n−1).
 
 *Proof.* Add the point x_{m+1}. Every realizable dichotomy d of the
 first m points extends to at least one realizable dichotomy of m+1
@@ -35,7 +35,7 @@ H, which are in general position in ℝ^{n−1} (general position of the
 originals with x_{m+1}). So the number of doubly-extendable dichotomies
 is C(m, n−1), and C(m+1, n) = C(m, n) + C(m, n−1). ∎
 
-**Lemma K′.2 (closed form).** With base cases C(1, n) = 2 (n ≥ 1) and
+**Theorem K′.2 (closed form).** With base cases C(1, n) = 2 (n ≥ 1) and
 C(m, 1) = 2,
     C(m, n) = 2 · Σ_{k=0}^{n−1} binom(m−1, k).
 *Proof.* Induction on m via Pascal's rule binom(m,k) =
@@ -63,7 +63,7 @@ P_store ≥ 1 − exp(−δ²n/8(1+o(1))). For m = (2+δ)n, symmetric. ∎
 dichotomy is a linear feasibility problem (find w with
 y_i(w·x_i) ≥ 1), solvable in polynomial time by LP. For the
 perceptron, storage capacity AND efficient search coexist: Γ ≈ 1.
-The learning wall of Proposition 5 is a property of *richer* classes,
+The learning wall of Theorem 5 is a property of *richer* classes,
 not of storage itself.
 
 **Scope.** This proves Conjecture A exactly for one architecture — the
@@ -89,7 +89,7 @@ exactly by a chain composition g_{i_k} ∘ ⋯ ∘ g_{i_1} of length ≤ k.
      |X|* (the ℓ+1 alphabet includes a stop symbol).
  (b) [weight floor] Any storage of the same behavior as memorized
      input–output facts at rate κ bits/param (the Theorem K regime,
-     Lemma 2 of CAPACITY_THEORY.md) needs at least |X|·b·(1−o(1))/κ
+     Theorem 2 of CAPACITY_THEORY.md) needs at least |X|·b·(1−o(1))/κ
      parameters per task when the behavior table is incompressible as a
      table. The ratio of (b) to (a) is Ω(2ⁿ b / (k log ℓ)) —
      **exponential in n**.
@@ -105,7 +105,7 @@ exactly by a chain composition g_{i_k} ∘ ⋯ ∘ g_{i_1} of length ≤ k.
 sequence i₁,…,i_j, j ≤ k, over the (ℓ+1)-letter alphabet with stop
 symbol: ≤ k⌈log₂(ℓ+1)⌉ bits; O(log T) delimits the count. Correctness:
 the chain determines the task's output on every x ∈ X. (b) Immediate
-from Lemma 2 (Fano/rate–distortion floor) applied per task. (c) The
+from Theorem 2 (Fano/rate–distortion floor) applied per task. (c) The
 number of chains of length ≤ k over ℓ primitives is Σ_{j≤k} ℓ^j; the
 enumeration in nondecreasing j is exhaustive, so the target chain is
 met within that budget. For the enlarged library, chains of length ≤ 2
@@ -114,7 +114,7 @@ over ℓ′ primitives number ≤ ℓ′ + ℓ′² ≤ 2ℓ′². ∎
 **Scope.** P′ is Theorem P with "algorithmic structure" instantiated as
 bounded compositionality — the restricted theorem the route in §5
 designates as stage 1. What stays open is the general-Kt version, which
-collides with MCSP-type hardness (Prop 5's wall). Note what P′ already
+collides with MCSP-type hardness (Theorem 5's wall). Note what P′ already
 settles: *whenever behavior has compositional structure, programs beat
 weights by an exponential factor, provably* — the formal content of
 "knowledge as programs". Empirical check: E5.
@@ -136,7 +136,7 @@ inputs are in general position (holds almost surely for generic θ₀ and
 inputs).
 
 **Theorem.** The number of realizable dichotomies is exactly C(m, P) of
-Lemma K′.2, hence the storage threshold is sharp at m = 2P:
+Theorem K′.2, hence the storage threshold is sharp at m = 2P:
 **κ = 2 bits per parameter, for every architecture, in the lazy
 regime.**
 
@@ -178,7 +178,7 @@ only worst-case *time* is exponential.
 𝒟 with E_𝒟[2^{Kt(task)}] ≤ S, the expected number of candidate checks
 of (i) is ≤ 2S — polynomial whenever S is.
 *Proof.* Linearity of expectation over the bound in (i). ∎
-Under such priors the Proposition-5 wall has exponentially small mass:
+Under such priors the Theorem-5 wall has exponentially small mass:
 a uniformly random parity on n bits has prior mass ~2^{−n} under any
 lightweight-Kt prior aligned with a compositional library.
 
@@ -274,7 +274,7 @@ is *what you are given*.
 **(c) Corollary (which wall binds whom).** Open-weight models on disk
 are white-box, genesis-published artifacts: Kearns–Valiant never binds
 them. The operative limits for capability-in-12-GB are Theorem K (weight
-storage), Lemma 2 (fact floors) and Theorem 8/F2 (structure under Q) —
+storage), Theorem 2 (fact floors) and Theorem 8/F2 (structure under Q) —
 never the crypto wall. The crypto wall binds exactly one actor: a
 learner facing an adversarial black box.
 

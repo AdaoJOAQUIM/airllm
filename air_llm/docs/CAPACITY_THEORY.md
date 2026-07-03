@@ -43,19 +43,19 @@ bound, and the field's entire compression literature is a battle to
 lower it.
 
 **Definition 4 (Learning efficiency gap).**
-Γ_ε^{A,C}(D) = LCDL_ε^{A,C}(D) / CDL_ε(D) ≥ 1 (Lemma 3).
+Γ_ε^{A,C}(D) = LCDL_ε^{A,C}(D) / CDL_ε(D) ≥ 1 (Theorem 3).
 Γ measures how far *learning* is from *description*: how much longer the
 programs found by optimization are than the shortest programs that exist.
 
 ## 2. First lemmas
 
-**Lemma 1 (Monotonicity, subadditivity).** CDL_ε(D) is non-increasing in
+**Theorem 1 (Monotonicity, subadditivity).** CDL_ε(D) is non-increasing in
 ε, and CDL_ε(D₁ ⊕ D₂) ≤ CDL_ε(D₁) + CDL_ε(D₂) + O(log).
 *Proof.* Weakening the requirement can only shrink nothing; for
 subadditivity, concatenate the two programs with an O(log)-bit
 dispatcher on the task tag. ∎
 
-**Lemma 2 (Fact floor — the 12 GB theorem).** If D requires recalling N
+**Theorem 2 (Fact floor — the 12 GB theorem).** If D requires recalling N
 independent uniform values of b bits each with error rate ≤ δ, then
 CDL_ε(D) ≥ N·b·(1 − H₂(δ)/b − δ·log₂(2^b − 1)/b) ≈ N·b for small δ.
 *Proof.* A program with the capability is a lossy code for the value
@@ -63,18 +63,18 @@ table; apply the rate–distortion / Fano bound to the (uniform) source. ∎
 *This is the precise form of "1T params of facts cannot fit in 12 GB",
 and the yardstick behind `factstore.density_report()`.*
 
-**Lemma 3 (Learning cannot beat description).**
+**Theorem 3 (Learning cannot beat description).**
 LCDL_ε^{A,C}(D) ≥ CDL_ε(D) for every A, C.
 *Proof.* A learned-and-encoded θ achieving ε IS a program achieving ε. ∎
 
-**Lemma 4 (Universal search closes the gap, at a price).** If A contains
+**Theorem 4 (Universal search closes the gap, at a price).** If A contains
 Levin universal search with unbounded C, then LCDL → CDL + O(1).
 *Proof.* Levin search enumerates programs in description-length order
 (THEORY.md, Thm 7a); given enough compute it finds a shortest one. ∎
 *So Γ > 1 is entirely a story about bounded compute and restricted
 algorithm families — i.e., about the real world.*
 
-**Proposition 5 (The gap can be exponential — assembled from known
+**Theorem 5 (The gap can be exponential — assembled from known
 theorems).** There are task families where CDL is O(n) bits yet every
 statistical-query learner (which includes noisy-gradient SGD) needs
 2^Ω(n) queries to reach ε: parity functions on n bits.
@@ -93,7 +93,7 @@ prevent.*
 ## 3. Falsifiable conjectures
 
 **Conjecture A (Universal parametric capacity constant).** For fact
-tasks (Lemma 2 setting) and gradient training to convergence with
+tasks (Theorem 2 setting) and gradient training to convergence with
 sufficient exposures, the extractable information per parameter of the
 *trained weights* approaches an architecture-independent constant
 κ ≈ 2 bits/param (int-8-robust, destroyed below ~4 bits/weight).
@@ -108,12 +108,12 @@ noise is the obvious attack).
 "Densing law" (capability density doubling ~3.5 months,
 arXiv:2412.04315) is the community lowering LCDL at fixed ε by
 algorithmic progress; it must flatten at Γ → Γ_min(A) > 1 for the
-SGD-family, strictly above the CDL floor by Proposition 5's obstruction.
+SGD-family, strictly above the CDL floor by Theorem 5's obstruction.
 *Prediction:* density growth for a fixed capability saturates within the
 decade; the saturation level identifies Γ_min empirically.
 
 **Conjecture C (Program-augmented systems change the exponent, not just
-the constant).** For capabilities with algorithmic structure (Lemma 2
+the constant).** For capabilities with algorithmic structure (Theorem 2
 does NOT apply), a reasoner+interpreter+library system (THEORY.md,
 concept architecture) achieves LCDL polylog in the fact-equivalent size —
 because procedures compress as programs (Kolmogorov) while weights pay
@@ -215,7 +215,7 @@ formalized without circularity — the natural currency is Levin's Kt
 (description length + log time), not plain K. (2) The general statement
 collides with meta-complexity: deciding whether short programs exist is
 MCSP-like, whose hardness is a central open problem (Hirahara's
-program); and Proposition 5 already shows gradient methods alone cannot
+program); and Theorem 5 already shows gradient methods alone cannot
 do it. (3) Library learning (DreamCoder) works empirically but has no
 theory: no theorem says compression of past solutions provably
 accelerates future search.

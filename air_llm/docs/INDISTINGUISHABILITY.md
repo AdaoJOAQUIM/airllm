@@ -2,7 +2,7 @@
 
 This document states and proves a genuine theorem — not a conjecture. It
 is the rigorous core of "1T-capability in 12 GB": the counting side is
-fully settled here; only the *finding* side (LCDL/Γ, Prop 5) stays open.
+fully settled here; only the *finding* side (LCDL/Γ, Theorem 5) stays open.
 The theorem is a specialization of the Occam / compression bound
 (Blumer, Ehrenfeucht, Haussler & Warmuth 1987; Vapnik–Chervonenkis
 uniform convergence). Everything below is standard, correct, and
@@ -141,7 +141,7 @@ OPEN (stated honestly, = the Fields-grade work):
   • Whether a *specific trained* teacher's Q-behavior has small B*
     (= Conjecture C / Theorem P): this is the LCDL question.
   • Whether SGD can FIND the short consistent g efficiently (= Γ,
-    obstructed in general by Prop 5 / MCSP).
+    obstructed in general by Theorem 5 / MCSP).
 
 The theorem cleanly separates the two: **the storage is not the wall;
 the search is.** That reframing is itself the contribution — it is why

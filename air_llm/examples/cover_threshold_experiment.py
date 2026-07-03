@@ -8,7 +8,7 @@ a.s.), i.i.d. random +-1 labels, and test realizability -- a linear
 feasibility problem y_i (w . x_i) >= 1, decided exactly by LP
 (Corollary K'.3: storage and efficient search coexist here).
 
-The theory column is the closed form of Lemma K'.2:
+The theory column is the closed form of Theorem K'.2:
 P_store = Pr[ Bin(m-1, 1/2) <= n-1 ].
 """
 
@@ -33,7 +33,7 @@ def separable(X, y):
 
 
 def theory(m, n):
-    # Lemma K'.2: P_store = 2^(1-m) * sum_{k<=n-1} binom(m-1, k)
+    # Theorem K'.2: P_store = 2^(1-m) * sum_{k<=n-1} binom(m-1, k)
     return sum(comb(m - 1, k) for k in range(min(n, m))) / 2 ** (m - 1)
 
 

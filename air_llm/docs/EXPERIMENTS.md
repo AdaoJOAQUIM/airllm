@@ -84,6 +84,33 @@ mechanism must be a rate–distortion analysis of the whole *trajectory*,
 not of one step. The naive model is dead; the refined question is alive
 and sharply posed.
 
+## E3 — The pseudo-model / two-walls control (2026-07-02)
+
+Empirical verification of Theorem 8 and formula F2
+(docs/INDISTINGUISHABILITY.md). Same fixed-capacity student (~448-bit
+logistic regression) distills two teachers on a domain of D = 2^14
+inputs; agreement measured under uniform Q. Script:
+`examples/pseudomodel_demo.py` (~4 s, pure numpy).
+
+| samples m | random teacher | halfspace teacher |
+|----------:|---------------:|------------------:|
+| 100 | 0.492 | 0.930 |
+| 500 | 0.500 | 0.969 |
+| 2,000 | 0.506 | 0.980 |
+| 8,000 | 0.501 | 0.988 |
+| 20,000 | 0.507 | 0.990 |
+
+**The two walls, separated on one line.** The *incompressible* teacher
+(random function, F2 worst case) pins student agreement at chance 0.500
+forever — pigeonhole holds exactly, a small responder provably cannot
+fake it, and this is why "12 GB cannot store a random 1T function" is a
+theorem, not an engineering gap. The *structured* teacher (a halfspace,
+small pseudo-dimension) reaches 0.99 indistinguishability with a
+tiny student after a few hundred samples — Door 2, and the reason
+distillation of real models works. **Same student both columns**; the
+only variable is the teacher's structure under Q. This is Theorem 8's
+content made visible: storage is not the wall, structure-plus-search is.
+
 ### What would make this discovery-grade
 
 1. Precision: is the plateau exactly the same constant across

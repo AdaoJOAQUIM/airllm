@@ -229,7 +229,63 @@ finitary and quantitative. Then push the frontier toward general Kt
 classes until it hits the MCSP wall — and *map the wall precisely*,
 which would be a major result even if the full theorem stays open.
 
-## 6. Why this could be "mathematics worthy of 2050"
+## 6. The five legal circumventions of the pigeonhole principle
+
+The pigeonhole principle — no injection from a larger finite set into a
+smaller one — cannot be contradicted where its hypotheses hold. Every
+piece of real mathematics that "gets around" counting deletes one
+hypothesis. There are five known doors; each is a mature theory, and
+each maps to an engineering strategy for capability-in-small-space.
+
+**Door 1 — delete finiteness (Hilbert's hotel).** Infinite sets inject
+into proper subsets. Irrelevant here: disks and weight vectors are
+finite. Listed for completeness — this is the door cranks knock on.
+
+**Door 2 — delete totality: only the typical pigeons fly (Shannon
+1948).** Compression never encodes *all* sequences, only the typical
+set of ~2^{nH} among 2^n. The AEP is precisely "pigeonhole avoided by
+restricting the domain to what actually occurs". *On this branch:*
+`lossless.py` — trained-weight exponents are atypical, hence the free
+29.6%. Limit: the typical set of a trained 1T model is still ~11
+bits/param deep (DFloat11 floor).
+
+**Door 3 — delete exactness: ε-injectivity (hashing, sketches).**
+Allowing collision probability ε lets a set map into a space
+exponentially smaller (Bloom filters, count-min, JL embeddings).
+"Lossless with probability 1−ε" is a different — and negotiable —
+contract than lossless. *On this branch:* untapped; a Bloom-backed
+fact-store index would be the first use.
+
+**Door 4 — delete the unbounded observer: computational
+indistinguishability (pseudorandomness).** A PRG seed of s bits unfolds
+into 2^s ≫ s bits that *no efficient test distinguishes* from true
+randomness (Blum-Micali, Håstad-Impagliazzo-Levin-Luby). Counting is
+not violated — most functions have no short seed — but *for every
+bounded observer* the world behaves as if it were. This is the deepest
+door, and all of cryptography lives behind it. **The precise rescue of
+"1T in 12 GB" it licenses:** define a *pseudo-model* — a 12 GB
+seed+generator whose outputs are computationally indistinguishable,
+on the query distribution, from the 1T model's. Existence for *some*
+weight ensembles follows from PRF machinery; existence for a *specific
+trained* model is exactly the LCDL question again (and distillation is
+its practical shadow: indistinguishable on the test distribution).
+
+**Door 5 — delete classical readout: quantum amplitudes (with the
+Holevo toll).** n qubits carry 2^n amplitudes but Holevo's theorem
+caps extraction at n classical bits: pigeonhole re-enters at the
+measurement interface. A warning door: apparent counting violations
+that vanish at readout.
+
+**Meta-theorem of this section (informal).** Every future "circumvention"
+must be classifiable as one of doors 2–5 or a new deletion of a
+hypothesis — and proof-complexity results (the weak pigeonhole
+principle's hardness for resolution, Haken 1985 onward) show even
+*proving* PHP is deep, but never that it fails. The productive research
+question is never "how to break counting" but "which hypothesis does my
+application not actually need?" — for capability-in-12-GB the answer is
+doors 2+3+4 jointly, which is Conjecture C wearing different clothes.
+
+## 7. Why this could be "mathematics worthy of 2050"
 
 Not because the definitions are hard — because they make previously
 incommensurable things comparable on one axis (bits): quantization

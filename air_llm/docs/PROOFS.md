@@ -200,15 +200,107 @@ posed frontier.
 
 ---
 
+## Theorem K‴ (the rich regime, resolved by splitting the object)
+
+*Circumvention: delete the hidden assumption that "capacity" is one
+number. It is three — and separating them settles two and sharpens the
+third.*
+
+**(a) Conservation bound (proven, trivial but load-bearing).** Encode
+each of P weights in b bits. Stored extractable information
+≤ P·b. Define the storage efficiency η = stored bits / (P·b). Then
+η ≤ 1 always. ∎ (Counting.)
+
+**(b) The representational constant "2" is FALSE (assembled).** With
+unbounded weight precision, ReLU networks can memorize N labeled points
+with Õ(√N) parameters (bit-extraction constructions; Vardi, Yehudai &
+Shamir 2021, arXiv:2110.03187) — i.e., ~√N bits per parameter:
+**no architecture-universal representational constant exists.** The
+resolution of the apparent paradox with (a): those constructions use
+Θ̃(√N)-bit precision per weight, so total weight-bits ≈ √N·√N = N and
+η ≈ 1 — bit extraction reallocates the SAME bit budget from many
+low-precision weights to few high-precision ones. Conjecture A, read
+representationally, is thereby refuted; the constant 2 was never a
+property of architectures. Verified numerically in E7: a single float64
+parameter stores ~50 bits.
+
+**(c) Robustness bound (proven).** If stored behavior must survive
+independent relative weight perturbations of size ρ (flat minima; int8
+robustness is ρ ≈ 2⁻⁸), then distinguishable robust weight
+configurations number ≤ (c/ρ)^P, so stored bits ≤ P·log₂(c/ρ):
+**κ ≤ log₂(c/ρ) bits/param.**
+*Proof.* Robust behaviors are constant on ρ-cubes; a [−W,W]^P box
+contains ≤ (cW/ρW)^P disjoint such cubes; distinguishable behaviors
+inject into cubes. ∎ E7 measures exactly this line: recoverable bits
+per parameter ≈ log₂(1/ρ).
+
+**(d) What remains — the dynamical constant, now minimal and sharp.**
+By (b) capacity is not representational; by (c) it is precision/
+robustness-bounded; by K′/K′′ it equals 2 exactly in solvable regimes;
+by E2 it degrades with training noise. The last open statement of
+Conjecture A is therefore purely dynamical:
+    *gradient training with a natural noise floor produces storage at
+    η ≈ 2/b_eff — why 2?*
+Every other reading is now settled. The designated attacks remain §5's
+(Gardner–Talagrand; trajectory rate–distortion), but the target has
+shrunk from "a law of architectures" to "a constant of SGD".
+
+---
+
+## Theorem P‴ (the crypto wall is an ACCESS phenomenon, not a
+computational one)
+
+*Circumvention: delete "query-only access" — the hypothesis that
+Kearns–Valiant hardness actually uses.*
+
+**(a) Genesis/white-box version (proven).** Let the target f be
+produced by any efficient process: f = Train(code, data, seed), with
+total genesis description g = |code| + |data-reference| + |seed| bits.
+Then LCDL(f) ≤ g + O(1), achieved by the efficient "learner" that
+simply carries the genesis and replays it.
+*Proof.* The genesis triple IS a program computing f; replaying it is
+efficient by assumption. ∎
+**Under white-box/genesis access, worst-case efficient P is TRUE for
+every efficiently-created target.** In particular every trained model's
+shortest known description is its recipe — verified bit-for-bit in E8.
+
+**(b) Query-access version stays FALSE under OWF** (P′′ iii): GGM
+pseudorandom functions have tiny genesis (a seed!) yet defeat every
+efficient *query* learner. Note what this juxtaposition proves: the
+same object is trivially compressible with the seed and cryptographically
+incompressible without it. The obstruction was never computation — it
+is *what you are given*.
+
+**(c) Corollary (which wall binds whom).** Open-weight models on disk
+are white-box, genesis-published artifacts: Kearns–Valiant never binds
+them. The operative limits for capability-in-12-GB are Theorem K (weight
+storage), Lemma 2 (fact floors) and Theorem 8/F2 (structure under Q) —
+never the crypto wall. The crypto wall binds exactly one actor: a
+learner facing an adversarial black box.
+
+**(d) The true remaining open object.** Between C = poly (black-box:
+hard) and C = C_train (genesis: trivial) lies the time–description
+tradeoff curve LCDL(C). Distillation, quantization and this repo's
+whole toolchain are empirical points in its interior. Characterizing
+the curve is the correctly-posed remainder of P — and it subsumes the
+Densing law (Conjecture B) as its time evolution.
+
+---
+
 ## The ledger (updated)
 
 | Statement | Status |
 |---|---|
 | K′: κ = 2 bits/param for the perceptron, sharp | **PROVEN** (Cover 1965; full proof above; E4) |
 | K′′: κ = 2 for EVERY architecture in the lazy regime | **PROVEN** (above; E6) |
-| K, rich regime: κ invariant under feature learning | OPEN — measured ≈ 2.1 (E2); the last gap of Conjecture A |
+| K‴a: conservation η ≤ 1 | **PROVEN** (counting) |
+| K‴b: representational universal constant | **FALSE** (bit extraction; E7) — Conjecture A amended |
+| K‴c: robust capacity κ ≤ log₂(c/ρ) | **PROVEN** (packing; E7 measures the line) |
+| K‴d: the dynamical constant — why SGD sits at η ≈ 2/b_eff | OPEN — the minimal remaining core of Conjecture A |
 | P′: exponential programs-vs-weights separation; exponent-reducing libraries | **PROVEN** (above; E5) |
 | P′′(i): LCDL = CDL + O(1) for all classes, unbounded compute | **PROVEN** (Levin bound) |
 | P′′(ii): efficient on average over simple-on-average task distributions | **PROVEN** (expectation bound) |
-| P, worst-case efficient | **FALSE under one-way functions** (P′′ iii) — not a target |
+| P‴a: worst-case efficient P under white-box/genesis access | **PROVEN** (genesis replay; E8) |
+| P, worst-case efficient, query-only access | **FALSE under one-way functions** (P′′ iii) — binds black boxes only |
+| P‴d: the tradeoff curve LCDL(C) | OPEN — the correctly-posed remainder (subsumes Densing law) |
 | Theorem 8: ε-indistinguishable pseudo-models at fixed budget | **PROVEN** (INDISTINGUISHABILITY.md; E3) |

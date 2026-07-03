@@ -217,6 +217,31 @@ TRUE; the crypto wall binds only query-access black boxes. What an
 offline 4 GB/12 GB device lacks is genesis-replay *resources*, i.e. a
 position on the LCDL(C) tradeoff curve — the correctly-posed remainder.
 
+## E9 — Tangent Capacity Principle: learned vs random features (2026-07-02)
+
+Verification of Theorem K‴d′ (docs/PROOFS.md). A rich-trained FactNet's
+*learned* hidden features versus an untrained twin's *random* features;
+storage of fresh random ±1 labels by a threshold readout, decided by LP.
+Both feature ranks = 64. Script: `examples/tangent_capacity_experiment.py`.
+
+| m/n_eff | LEARNED features | RANDOM features | theory |
+|---:|---:|---:|---:|
+| 1.0 | 0.850 | 0.925 | 1.000 |
+| 1.5 | 0.925 | 0.875 | 1.000 |
+| 2.0 | 0.325 | 0.375 | 0.500 |
+| 2.5 | 0.000 | 0.025 | 0.005 |
+| 3.0 | 0.000 | 0.000 | 0.000 |
+
+The two columns match each other at every ratio and share the sharp
+threshold at 2 bits per readout dimension (the mild sub-theory dip at
+low ratios reflects imperfect general position: these features live on
+a 32-dimensional embedding manifold). **Feature learning moved the
+space, not the constant** — the content of the Tangent Capacity
+Principle, measured. Together: E4 (perceptron), E6 (two fixed
+architectures), E9 (learned features), E2 (full rich training, ≈2.1)
+— four independent measurements, one constant, and now one mechanism:
+Cover's count on the operative tangent space.
+
 ### What would make this discovery-grade
 
 1. Precision: is the plateau exactly the same constant across

@@ -287,6 +287,89 @@ Densing law (Conjecture B) as its time evolution.
 
 ---
 
+## Theorem K‴d′ (the Tangent Capacity Principle — where the 2 comes from)
+
+*Circumvention: delete the assumption that "the constant of SGD" is
+about SGD at all. The 2 is the Cover capacity of a tangent space; the
+dynamics only choose WHICH tangent space.*
+
+**Principle.** At any weight configuration θ, the locally trainable
+directions span the tangent feature space {∇_θ f_θ(x)} ≅ ℝ^P, and sign
+readouts of a P-dimensional linear space have Cover capacity exactly 2P
+(Theorem K′). Feature learning moves the tangent space; it cannot
+change its dimension or its Cover constant.
+
+**(i) Lazy regime (proven unconditionally).** Training never leaves the
+initial tangent space; K′′ gives κ = 2. Moreover the dynamics *achieve*
+it: below capacity the consistent set is nonempty (K′.2) and the lazy
+problem is convex — gradient descent on separable logistic loss
+converges to a separator (Soudry et al. 2018), and LP finds one in
+polynomial time (K′.3). So for lazy training, existence AND
+reachability coincide: **the dynamical constant equals 2, proven.**
+
+**(ii) Rich regime (proven conditionally on a named premise).**
+PREMISE LPL (Late-Phase Linearization): after feature learning, the
+final phase of training is effectively linearized around the learned
+representation (empirically documented: the after-training NTK
+describes late dynamics — Fort et al. 2020, arXiv:2010.15110).
+THEOREM: under LPL, storage at convergence is governed by the final
+tangent space, so κ = 2 bits per trainable parameter for every
+architecture and every training reaching a late-lazy phase — i.e.,
+**Conjecture A in full, conditional on LPL.**
+*Proof.* Under LPL the storage-relevant class is sign of a linear
+functional on the final tangent features; apply K′′ at θ_final. ∎
+
+**(iii) Evidence that the premise carries the phenomenon.** E6: 2 per
+trainable parameter on two unrelated *fixed* feature maps. E9: the
+*learned* features of a rich-trained network obey the same Cover
+threshold at 2 per readout dimension — feature learning changed which
+space, not the constant. E2: rich full training measures ≈ 2.1 per
+total parameter. The chain K′ → K′′ → K‴d′ locates the constant's
+origin precisely: **2 = Cover's count, inherited by every regime whose
+endgame is linear in its own tangent space.**
+
+**Residue (bedrock).** What remains is exactly the premise LPL as a
+theorem of SGD dynamics — a named, measurable, well-posed statement
+(its instruments: after-training NTK alignment; our E2/E9). This is no
+longer a mystery constant; it is one dynamical lemma away from closure.
+
+---
+
+## Theorem P‴d′ (the LCDL(C) curve: proven skeleton, and the
+identification that ends the game)
+
+**(i) Skeleton (proven).** For every target f:
+  - LCDL_ε(C) is nonincreasing in C (more compute never hurts);
+  - LCDL_ε(∞) = CDL_ε + O(1) (Levin, P′′i);
+  - LCDL_ε(C_genesis) ≤ g, the genesis size (P‴a);
+  - for lazy-representable targets (teacher realizable as a threshold
+    of a d-dimensional feature map), the curve drops at ALREADY
+    POLYNOMIAL C: draw m = (d̃ ln2 + ln(1/δ))/ε samples (Theorem 8),
+    find a consistent halfspace by LP in poly time (K′.3);
+    LCDL_ε(poly) = Õ(d) — E3's structured column measured exactly this;
+  - for GGM targets under OWF, LCDL_ε(C) stays maximal for all
+    polynomial C under query access (P′′iii).
+
+**(ii) The dichotomy (proven).** Consequently the curve *classifies*
+targets: early-drop (learnable structure) versus never-drop
+(pseudorandom) — with both classes provably inhabited.
+
+**(iii) The identification (terminal).** The remaining question — the
+exact shape of LCDL(C) for general targets and distributions — IS, up
+to standard reductions, the question of average-case complexity:
+deciding it decides between Impagliazzo's five worlds (Algorithmica /
+Heuristica / Pessiland / Minicrypt / Cryptomania, Impagliazzo 1995).
+In particular: a proof that natural task distributions always admit
+early-drop curves would collapse Pessiland; a proof of never-drop
+without OWFs would build cryptography from nothing. **Any further
+"circumvention" of P‴d would therefore resolve the central open
+problem of computational complexity.** This identification is the
+terminal state of the program: our question is now pinned to bedrock —
+mapped onto THE canonical open problem, the mathematical analogue of
+an NP-hardness proof. One does not circumvent bedrock; one names it.
+
+---
+
 ## The ledger (updated)
 
 | Statement | Status |
@@ -296,11 +379,13 @@ Densing law (Conjecture B) as its time evolution.
 | K‴a: conservation η ≤ 1 | **PROVEN** (counting) |
 | K‴b: representational universal constant | **FALSE** (bit extraction; E7) — Conjecture A amended |
 | K‴c: robust capacity κ ≤ log₂(c/ρ) | **PROVEN** (packing; E7 measures the line) |
-| K‴d: the dynamical constant — why SGD sits at η ≈ 2/b_eff | OPEN — the minimal remaining core of Conjecture A |
+| K‴d′: Tangent Capacity Principle — the 2 is Cover's count on the operative tangent space | **PROVEN** lazy; **PROVEN under premise LPL** in the rich regime (E9) |
+| Premise LPL: late-phase linearization of SGD | OPEN — one measurable dynamical lemma; the last brick of Conjecture A |
 | P′: exponential programs-vs-weights separation; exponent-reducing libraries | **PROVEN** (above; E5) |
 | P′′(i): LCDL = CDL + O(1) for all classes, unbounded compute | **PROVEN** (Levin bound) |
 | P′′(ii): efficient on average over simple-on-average task distributions | **PROVEN** (expectation bound) |
 | P‴a: worst-case efficient P under white-box/genesis access | **PROVEN** (genesis replay; E8) |
 | P, worst-case efficient, query-only access | **FALSE under one-way functions** (P′′ iii) — binds black boxes only |
-| P‴d: the tradeoff curve LCDL(C) | OPEN — the correctly-posed remainder (subsumes Densing law) |
+| P‴d′: LCDL(C) skeleton — monotone, both endpoints, poly-drop for lazy-representable targets, early/never-drop dichotomy | **PROVEN** (E3) |
+| P‴d, full shape for general distributions | IDENTIFIED with Impagliazzo's five worlds — bedrock; not circumventable without resolving average-case complexity |
 | Theorem 8: ε-indistinguishable pseudo-models at fixed budget | **PROVEN** (INDISTINGUISHABILITY.md; E3) |

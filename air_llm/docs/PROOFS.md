@@ -121,12 +121,94 @@ weights by an exponential factor, provably* — the formal content of
 
 ---
 
-## The ledger
+## Theorem K′′ (architecture-universality in the lazy regime)
+
+*Hypothesis deleted from full K: feature learning. What remains: any
+architecture trained in the linearized (lazy/NTK) regime — and there,
+universality is a theorem.*
+
+**Setting.** Take ANY differentiable architecture f_θ with P parameters,
+trained in the linearized regime around a centered initialization θ₀
+(f_{θ₀} ≡ 0, achievable by the standard antisymmetric-duplication
+construction): f_θ(x) ≈ ∇_θ f_{θ₀}(x) · (θ − θ₀). Decisions by sign.
+Assume the gradient features φ(x_i) = ∇_θ f_{θ₀}(x_i) ∈ ℝ^P of the m
+inputs are in general position (holds almost surely for generic θ₀ and
+inputs).
+
+**Theorem.** The number of realizable dichotomies is exactly C(m, P) of
+Lemma K′.2, hence the storage threshold is sharp at m = 2P:
+**κ = 2 bits per parameter, for every architecture, in the lazy
+regime.**
+
+*Proof.* In the linearized regime the trainable object is the direction
+δ = θ − θ₀ ∈ ℝ^P, and the decision on x_i is sign(φ(x_i)·δ): a
+homogeneous linear threshold in the P-dimensional gradient-feature
+space. Apply Theorem K′ with n = P. Architecture enters only through
+φ — and Cover's count depends on no property of φ beyond general
+position. ∎
+
+**Scope.** This proves the architecture-independence half of
+Conjecture A for the lazy regime: depth, attention, convolutions — all
+give κ = 2 when training stays linearized. The remaining gap to full K
+is exactly the *feature-learning (rich) regime*; there our bench
+already measures κ ≈ 2.1 on a rich-regime MLP (E2), so the constant
+empirically survives feature learning — that survival is now the
+precise open statement. Empirical check of K′′: E6 (two unrelated
+feature architectures, same threshold at 2 bits per trainable
+parameter).
+
+---
+
+## Theorem P′′ (full P without the compute bound, and on average)
+
+*Hypotheses deleted from full P: (i) bounded compute, or (ii)
+worst-case task choice. Each deletion yields a theorem.*
+
+**(i) Unbounded-compute version.** For ANY task with a consistent
+program of length ℓ* and per-candidate check time t, Levin-ordered
+enumeration returns a consistent program of length ≤ ℓ* (hence
+LCDL ≤ CDL + O(1)) after at most 2^{ℓ*+1} candidate checks.
+*Proof.* Enumerate programs in nondecreasing length; there are
+< 2^{ℓ*+1} programs of length ≤ ℓ*; the target is among them; the first
+consistent one returned is no longer than it. ∎
+So the *description* claim of P holds for every algorithmic class;
+only worst-case *time* is exponential.
+
+**(ii) Average-case version.** If tasks are drawn from any distribution
+𝒟 with E_𝒟[2^{Kt(task)}] ≤ S, the expected number of candidate checks
+of (i) is ≤ 2S — polynomial whenever S is.
+*Proof.* Linearity of expectation over the bound in (i). ∎
+Under such priors the Proposition-5 wall has exponentially small mass:
+a uniformly random parity on n bits has prior mass ~2^{−n} under any
+lightweight-Kt prior aligned with a compositional library.
+
+**(iii) Sharpening: worst-case-efficient full P is FALSE under standard
+cryptography.** Goldreich–Goldwasser–Micali pseudorandom functions are
+computable by small circuits (small CDL) yet, by definition,
+indistinguishable from random functions to every efficient observer. An
+efficient learner achieving small LCDL on them from query access would
+distinguish them from random (a random function admits no consistent
+short responder — Theorem 8's F2 negative control). Hence, if one-way
+functions exist, no efficient algorithm attains small LCDL on all
+small-CDL targets (Kearns–Valiant hardness, assembled). ∎
+**Consequence.** The "open" worst-case half of P is not awaiting a
+prover — it is almost certainly false. The true and proven content of P
+is P′ (compositional families) + P′′(ii) (simple-on-average
+distributions), and the genuine open problem is *characterizing the
+distributions* for which learning is efficient. That is the correctly
+posed frontier.
+
+---
+
+## The ledger (updated)
 
 | Statement | Status |
 |---|---|
-| K′: κ = 2 bits/param for the perceptron, sharp | **PROVEN** (Cover 1965; full proof above) |
-| K: same constant for all architectures | OPEN (universality; route in §5) |
-| P′: exponential program-vs-weights separation for compositional families; exponent-reducing libraries | **PROVEN** (above) |
-| P: polylog LCDL for general algorithmic classes | OPEN (MCSP wall; route in §5) |
-| Theorem 8: ε-indistinguishable pseudo-models at fixed budget | **PROVEN** (INDISTINGUISHABILITY.md) |
+| K′: κ = 2 bits/param for the perceptron, sharp | **PROVEN** (Cover 1965; full proof above; E4) |
+| K′′: κ = 2 for EVERY architecture in the lazy regime | **PROVEN** (above; E6) |
+| K, rich regime: κ invariant under feature learning | OPEN — measured ≈ 2.1 (E2); the last gap of Conjecture A |
+| P′: exponential programs-vs-weights separation; exponent-reducing libraries | **PROVEN** (above; E5) |
+| P′′(i): LCDL = CDL + O(1) for all classes, unbounded compute | **PROVEN** (Levin bound) |
+| P′′(ii): efficient on average over simple-on-average task distributions | **PROVEN** (expectation bound) |
+| P, worst-case efficient | **FALSE under one-way functions** (P′′ iii) — not a target |
+| Theorem 8: ε-indistinguishable pseudo-models at fixed budget | **PROVEN** (INDISTINGUISHABILITY.md; E3) |

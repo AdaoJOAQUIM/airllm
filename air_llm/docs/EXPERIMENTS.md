@@ -253,3 +253,23 @@ Cover's count on the operative tangent space.
    capacity law requires.
 3. Scale: repeat over 3-4 orders of magnitude of parameters with error
    bars. All of it fits on one GPU-day.
+
+## E12 — Scaling of exploitable redundancy (the deciding measurement, first step)
+
+RESEARCH_CHARTER.md element 6. Lightly-trained FactNets vs random-init
+twins; lossless bits/param gap = exploitable byte-plane redundancy.
+Script: `examples/scaling_redundancy_experiment.py`.
+
+| hidden | params | random b/p | trained b/p | gap |
+|---:|---:|---:|---:|---:|
+| 32 | 5,216 | 12.47 | 12.47 | 0.00 |
+| 64 | 8,320 | 11.76 | 12.03 | -0.27 |
+| 128 | 14,528 | 11.47 | 11.41 | 0.06 |
+| 256 | 26,944 | 11.42 | 11.00 | 0.42 |
+
+HONEST READING: weak, noisy, NOT conclusive at this scale — the gap is
+non-monotonic. The largest model shows the largest positive gap (0.42),
+a hint that redundancy grows with size, but the lossless codec is a weak
+probe (byte-plane only, blind to functional redundancy). Settling the
+central obstacle needs real 1B-70B models and a mutual-information /
+functional estimator, per the charter. This is step 1, not a result.

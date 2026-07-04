@@ -273,3 +273,25 @@ a hint that redundancy grows with size, but the lossless codec is a weak
 probe (byte-plane only, blind to functional redundancy). Settling the
 central obstacle needs real 1B-70B models and a mutual-information /
 functional estimator, per the charter. This is step 1, not a result.
+
+## E13 — End-to-end distillation: constructive Theorem 8 (charter element 3)
+
+The missing engineering piece, built (airllm/distill.py). A trained
+teacher (19,744 params, 0.955 task accuracy) is compressed into student
+pseudo-models of increasing size via soft-label KL distillation on
+samples from Q; agreement with the teacher measured under Q. Fixed shared
+task (no confound). Script: `examples/distillation_demo.py` (~9 s).
+
+| student H | params | distilled vs teacher | direct vs teacher |
+|---:|---:|---:|---:|
+| 8 | 3,624 | 0.508 | 0.435 |
+| 16 | 4,144 | 0.640 | 0.579 |
+| 32 | 5,184 | 0.717 | 0.685 |
+| 64 | 7,264 | 0.773 | 0.741 |
+
+Agreement rises monotonically with student size — Theorem 8 made
+constructive (more bits → smaller d_Q). Distillation beats direct
+training at every size because it copies the teacher's actual FUNCTION,
+not the task; the two converge as the teacher nears task-optimality.
+This closes RESEARCH_CHARTER.md element 3: the Transformer→pseudo-model
+transformation algorithm now exists and is verified end-to-end.

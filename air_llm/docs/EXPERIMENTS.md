@@ -295,3 +295,29 @@ training at every size because it copies the teacher's actual FUNCTION,
 not the task; the two converge as the teacher nears task-optimality.
 This closes RESEARCH_CHARTER.md element 3: the Transformer→pseudo-model
 transformation algorithm now exists and is verified end-to-end.
+
+## E15 — Conservation & pointer overhead, measured (2026-07-02)
+
+Script: `examples/pointer_conservation_test.py` (~6 s).
+
+**A) Trash test (100 MB file).** Move-to-trash freed **−0.0 MB** (a
+pointer rename moves nothing); restore returned the file bit-identical
+(sha256 equal) *because the bytes never left*; real deletion freed
+**+104.9 MB** and made restore impossible. Restorable ⟺ bytes exist:
+the conservation law, verified on the filesystem itself.
+
+**B) 1,000,000 records — objects vs their replacement.**
+
+| representation | B/record | build | access (sum field) |
+|---|---:|---:|---:|
+| class instances | 160.4 | 3.19 s | 28.1 ms |
+| `__slots__` objects | 120.4 | 1.31 s | 25.1 ms |
+| tuples | 128.4 | 0.89 s | 24.2 ms |
+| **numpy SoA arrays** | **16.0** | **~0 s** | **0.7 ms** |
+
+Objects/pointers pay ~10× memory and ~40× access time for the SAME
+information — pure container metadata. The replacement (contiguous
+structure-of-arrays) is exactly what the engine already uses everywhere
+it matters: tensors, safetensors shards, byte-plane codec, factstore
+packing. Confirmed: "heavy and slow" is the container, never the
+information.
